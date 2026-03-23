@@ -1,3 +1,7 @@
+---
+title: "Zane: CLI Commands"
+---
+
 # Commands for the CLI
 
 
@@ -7,4 +11,3 @@
 | zane build | Build for all available platforms with optimization. |
 | zane debug | Show the ast.                                        |
 | zane ir    | Show llvm ir.                                        |
-
