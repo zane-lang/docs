@@ -1,5 +1,5 @@
 ---
-title: "Zane: CLI"
+title: CLI
 ---
 
 # CLI
