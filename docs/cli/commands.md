@@ -1,5 +1,5 @@
 ---
-title: "Zane: CLI Commands"
+title: CLI Commands
 ---
 
 # Commands for the CLI

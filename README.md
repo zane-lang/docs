@@ -1,8 +1,9 @@
 # Zane docs
 
-Documentation pages for the Zane website, which the
-[`website`](https://github.com/zane-lang/website) repository includes as a
-submodule. So far it holds an early description of the `zane` command.
+Documentation pages for the Zane website. The
+[`website`](https://github.com/zane-lang/website) repository downloads this
+repository when it builds and serves its pages under `/docs`. So far it holds an
+early description of the `zane` command.
 
 > **Status:** not maintained at the moment (its pages were last changed in March 2026) and
 > behind the current language and tools. **Newcomers can skip this
