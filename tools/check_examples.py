@@ -26,7 +26,7 @@ import tempfile
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 STD_URL = "https://github.com/zane-lang/std"
 ZANE_URL = "https://github.com/zane-lang/zane/releases/download/{v}/zane-{os}-{arch}"
@@ -204,6 +204,33 @@ def zane_home():
     return Path(os.environ.get("ZANE_HOME") or Path.home() / ".zane")
 
 
+def _check_member(m):
+    """Refuse an archive member that would land, or link, outside the folder it is unpacked in."""
+    def escapes(path):
+        p = PurePosixPath(path)
+        if p.is_absolute() or Path(path).is_absolute():
+            return True
+        depth = 0
+        for part in p.parts:
+            depth += -1 if part == ".." else 0 if part == "." else 1
+            if depth < 0:
+                return True
+        return False
+
+    if not (m.isfile() or m.isdir() or m.issym() or m.islnk()):
+        raise ValueError("compiler archive member %s is not a file, folder or link" % m.name)
+    if escapes(m.name):
+        raise ValueError("compiler archive member %s lies outside the archive" % m.name)
+    if m.issym() and escapes(str(PurePosixPath(m.name).parent / m.linkname)):
+        raise ValueError("compiler archive link %s points outside the archive" % m.name)
+    if m.islnk():
+        # A hard link names its target by archive path, top directory included.
+        parts = PurePosixPath(m.linkname).parts[1:]
+        if not parts or escapes(m.linkname) or escapes(str(PurePosixPath(*parts))):
+            raise ValueError("compiler archive link %s points outside the archive" % m.name)
+        m.linkname = str(PurePosixPath(*parts))
+
+
 def extract_compiler(archive, tc):
     """Unpack a compiler release into `tc`, which appears only if every member extracts."""
     tc.parent.mkdir(parents=True, exist_ok=True)
@@ -215,6 +242,7 @@ def extract_compiler(archive, tc):
                 if not parts:
                     continue
                 m.name = str(Path(*parts))
+                _check_member(m)
                 if sys.version_info >= (3, 12):
                     t.extract(m, staging, filter="data")
                 else:

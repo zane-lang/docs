@@ -214,6 +214,49 @@ class Install(unittest.TestCase):
             ce.extract_compiler(archive, tc)
             self.assertEqual((tc / "bin" / "zanec").read_bytes(), b"ok")
 
+    def _archive(self, d, *members):
+        archive = Path(d) / "c.tar.gz"
+        with tarfile.open(archive, "w:gz") as t:
+            for name, kind, link in members:
+                info = tarfile.TarInfo(name)
+                if kind == "file":
+                    info.size = 2
+                    t.addfile(info, io.BytesIO(b"ok"))
+                    continue
+                info.type = tarfile.SYMTYPE if kind == "sym" else tarfile.LNKTYPE
+                info.linkname = link
+                t.addfile(info)
+        return archive
+
+    def test_members_that_escape_are_refused(self):
+        cases = [
+            [("top/../../evil", "file", None)],
+            [("top/bin/../../../evil", "file", None)],
+            [("top/link", "sym", "../../evil")],
+            [("top/link", "sym", "/etc/passwd")],
+            [("top/bin/zanec", "file", None), ("top/hard", "lnk", "../evil")],
+        ]
+        for members in cases:
+            with self.subTest(members=members), tempfile.TemporaryDirectory() as d:
+                tc = Path(d) / "toolchains" / "v0.40"
+                with self.assertRaises(ValueError):
+                    ce.extract_compiler(self._archive(d, *members), tc)
+                self.assertFalse(tc.exists())
+                self.assertEqual(sorted(p.name for p in Path(d).iterdir()), ["c.tar.gz", "toolchains"])
+                self.assertEqual(list(tc.parent.iterdir()), [])
+
+    def test_links_inside_the_archive_extract(self):
+        with tempfile.TemporaryDirectory() as d:
+            tc = Path(d) / "toolchains" / "v0.40"
+            ce.extract_compiler(self._archive(
+                d,
+                ("top/bin/zanec", "file", None),
+                ("top/bin/zc", "sym", "zanec"),
+                ("top/lib/zanec", "lnk", "top/bin/zanec"),
+            ), tc)
+            self.assertEqual((tc / "bin" / "zc").read_bytes(), b"ok")
+            self.assertEqual((tc / "lib" / "zanec").read_bytes(), b"ok")
+
 
 class Commands(unittest.TestCase):
     def test_relative_zane_path_is_made_absolute(self):
