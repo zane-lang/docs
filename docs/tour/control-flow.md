@@ -93,8 +93,9 @@ i = 3, total = 6
 i = 4, total = 10
 ```
 
-Counting starts at 1, and so do positions in lists, arrays and strings: a list
-of `n` elements has positions `1` to `n`.
+The loop starts from whatever value its counter holds. Positions in lists,
+arrays and strings start at 1: a list of `n` elements has positions `1` to
+`n`, so a count over one starts its counter at `Int(1)`.
 
 Every loop runs a known number of times. A search that stops early returns
 from inside the block:
