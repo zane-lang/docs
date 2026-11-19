@@ -1,0 +1,19 @@
+name: check-examples
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/zane-check-examples
+            ~/.zane
+          key: zane-${{ hashFiles('toolchain.coda') }}
+      - name: Unit tests
+        run: python3 -m unittest discover -s tools -v
+      - name: Check examples
+        run: python3 tools/check_examples.py --install docs/
