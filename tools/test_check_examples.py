@@ -1,15 +1,23 @@
+import io
+import os
 import shutil
+import tarfile
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_examples as ce  # noqa: E402
 
 FIX = Path(__file__).resolve().parent / "fixtures"
-ZANE = shutil.which("zane")
+# CI sets ZANE to the installed pinned zane and ZANE_REQUIRED=1, so that the
+# integration tests fail instead of skipping when it is missing.
+ZANE = os.environ.get("ZANE") or shutil.which("zane")
+if os.environ.get("ZANE_REQUIRED") and not (ZANE and Path(ZANE).exists()):
+    raise SystemExit("ZANE_REQUIRED is set, but no zane was found (ZANE=%r)" % ZANE)
 
 
 class FenceParser(unittest.TestCase):
@@ -145,6 +153,85 @@ class OutputAndPins(unittest.TestCase):
             calls = log.read_text(encoding="utf-8").splitlines()
             self.assertEqual(calls[0], "init tmpl --yes")
             self.assertEqual(calls[1], "toolchain update v0.40")
+
+
+def fake_zane(d, body):
+    """A stand-in zane: a shell script that runs `body` with the arguments in $@."""
+    fake = Path(d) / "zane"
+    fake.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+    fake.chmod(0o755)
+    return str(fake)
+
+
+class Install(unittest.TestCase):
+    def test_toolchains_go_under_zane_home(self):
+        with mock.patch.dict(os.environ, {"ZANE_HOME": "/opt/zh"}):
+            self.assertEqual(ce.zane_home(), Path("/opt/zh"))
+        with mock.patch.dict(os.environ, {"ZANE_HOME": ""}):
+            self.assertEqual(ce.zane_home(), Path.home() / ".zane")
+
+    def test_failed_download_leaves_nothing_behind(self):
+        class Broken(io.BytesIO):
+            def read(self, *a):
+                if self.tell():
+                    raise ConnectionResetError("cut off")
+                return super().read(4)
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "zane-v0.18"
+            with mock.patch.object(ce.urllib.request, "urlopen", lambda url: Broken(b"partial data")):
+                with self.assertRaises(ConnectionResetError):
+                    ce._download("https://example.invalid/zane", dest)
+            self.assertEqual(list(Path(d).iterdir()), [])
+
+    def test_failed_extraction_leaves_no_toolchain(self):
+        with tempfile.TemporaryDirectory() as d:
+            archive = Path(d) / "c.tar.gz"
+            buf = io.BytesIO()
+            with tarfile.open(fileobj=buf, mode="w:gz") as t:
+                data = os.urandom(100000)  # incompressible, so the cut lands mid-member
+                info = tarfile.TarInfo("top/bin/zanec")
+                info.size = len(data)
+                t.addfile(info, io.BytesIO(data))
+            archive.write_bytes(buf.getvalue()[:200])  # truncated
+            tc = Path(d) / "toolchains" / "v0.40"
+            with self.assertRaises(Exception):
+                ce.extract_compiler(archive, tc)
+            self.assertFalse(tc.exists())
+            self.assertEqual(list(tc.parent.iterdir()), [])
+
+    def test_complete_archive_extracts_without_its_top_directory(self):
+        with tempfile.TemporaryDirectory() as d:
+            archive = Path(d) / "c.tar.gz"
+            with tarfile.open(archive, "w:gz") as t:
+                info = tarfile.TarInfo("top/bin/zanec")
+                info.size = 2
+                t.addfile(info, io.BytesIO(b"ok"))
+            tc = Path(d) / "toolchains" / "v0.40"
+            ce.extract_compiler(archive, tc)
+            self.assertEqual((tc / "bin" / "zanec").read_bytes(), b"ok")
+
+
+class Commands(unittest.TestCase):
+    def test_relative_zane_path_is_made_absolute(self):
+        self.assertEqual(ce.executable("./bin/zane"), str(Path("bin/zane").resolve()))
+        self.assertEqual(ce.executable("zane"), "zane")
+
+    def test_timed_out_check_fails_an_error_example(self):
+        with tempfile.TemporaryDirectory() as d:
+            zane = fake_zane(d, "sleep 5\n")
+            template = Path(d) / "tmpl"
+            (template / "bin" / "tmpl").mkdir(parents=True)
+            (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
+            ex = [e for e in ce.collect([str(FIX / "error_compiles.md")]) if e.kind == ce.ERROR][0]
+            ex.error_text = None  # with no expected text, any non-zero exit used to pass
+            with mock.patch.object(ce, "TIMEOUT", 1):
+                msg = ce.check_example(ex, zane, template, {}, False, d)
+            self.assertIsNotNone(msg)
+            self.assertIn("timed out", msg)
 
 
 @unittest.skipUnless(ZANE, "zane is not installed")

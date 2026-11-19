@@ -2,18 +2,24 @@ name: check-examples
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/zane-check-examples
             ~/.zane
           key: zane-${{ hashFiles('toolchain.coda') }}
-      - name: Unit tests
-        run: python3 -m unittest discover -s tools -v
       - name: Check examples
         run: python3 tools/check_examples.py --install docs/
+      - name: Checker tests, with the pinned zane
+        run: |
+          ZANE="$HOME/.cache/zane-check-examples/bin/zane-$(awk '$1 == "zane" { print $2 }' toolchain.coda)"
+          ZANE="$ZANE" ZANE_REQUIRED=1 python3 -m unittest discover -s tools -v

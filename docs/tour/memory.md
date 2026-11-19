@@ -234,8 +234,11 @@ The parameter's type says how a reference-type argument travels:
 | `a &Account` | reference | keeps the object; the callee may store the reference |
 
 A value-type argument is always borrowed, and a method's subject always is.
-Nothing else in the same call may write what a call borrows, so a function
-never sees its argument change under it.
+Nothing else in the same call may write what a call borrows, so no other part
+of that call changes the argument under the callee. Spawned calls are the one
+way to share a value with a writer: a spawned call reading a value another
+spawn is changing reads a coherent snapshot of it, and two reads may see
+different values ([Concurrency](concurrency.md)).
 
 ## In the spec
 

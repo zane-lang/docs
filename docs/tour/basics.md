@@ -2,10 +2,12 @@
 
 This page covers the shape of a Zane program: symbols, numbers, booleans, strings and comments.
 
-Every example on these pages is a whole program. To run one, put it in
-`bin/hello/main.zn` of a project that depends on `std` ([Your first
-project](../first-project.md)) and run `zane run`; the first line may name any
-package, as long as it matches the directory.
+Most examples on these pages are whole programs: they declare `main`. To run
+one, put it in `bin/hello/main.zn` of a project that depends on `std` ([Your
+first project](../first-project.md)) and run `zane run`; the first line may
+name any package, as long as it matches the directory. A few show only part of
+a package, such as a library's file or one function, and run only with the rest
+of the program around them.
 
 ## A program
 

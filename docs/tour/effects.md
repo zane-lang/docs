@@ -15,8 +15,15 @@ may write:
 
 Every function may change its own local symbols. What it cannot do is reach
 out: parameters other than the subject are read-only, there are no global
-variables, and a package holds constants only. So the signature alone tells
-you what a call can change, however deep its own calls go.
+variables, and a package holds constants only. So outside the root package,
+the signature alone tells you what a call can change, however deep its own
+calls go.
+
+The root package, the one that declares `main`, is the exception: any
+function or method there may also write the program's console and runtime,
+which it reaches through `@program$`, and the foreign capabilities its foreign
+variables give. That is why `main`, a function, can print. A parameter stays
+read-only even there, as the next example shows.
 
 That bound is checked. A function that tries to write a parameter is
 rejected:
@@ -39,8 +46,11 @@ Unit main() {
 }
 ```
 
-Because a function that writes nothing has no effect besides its result, the
-compiler is free to run such calls in parallel or ahead of time.
+A function that writes nothing may still read the world outside the program,
+as one that reads the program's arguments does. The compiler sees which calls
+make such reads, from their bodies and the calls they make. A call that writes
+nothing and reads nothing outside the program has no effect besides its
+result, so the compiler is free to run it in parallel or ahead of time.
 
 ## Capabilities
 

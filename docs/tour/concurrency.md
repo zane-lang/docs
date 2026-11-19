@@ -83,8 +83,9 @@ The block given to `do` ends only once both spawns are done, so the line
 after it sees both sums. A lambda captures nothing, so a spawned call can
 reach only what it is passed.
 
-On a `Runtime`, `runtime!setThreads(Int(4))` sizes the thread pool, and
-aborts for a count below one. Spawning a
+On a `Runtime`, `runtime!setThreads(Int(4)) ?? Unit();` sizes the thread
+pool. It aborts for a count below one, so the call needs a handler
+([Errors](errors.md)). Spawning a
 worker (`spawn subject!setInterval(…)`) runs it in the background; the
 compiler's runtime keeps a pool thread for each waiting worker (compiler
 [divergence 11](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#11-a-spawned-workers-wait-holds-its-pool-thread)).

@@ -35,6 +35,9 @@ COMPILER_URL = (
     "zane-compiler-{v}-{os}-{arch}.tar.gz"
 )
 TIMEOUT = 300
+# run()'s exit code for a command it stopped: no process exits with it
+# (a negative code is a signal, and signals end at 64).
+TIMED_OUT = -1000
 
 
 # --------------------------------------------------------------------------
@@ -184,12 +187,46 @@ def _plat():
 
 
 def _download(url, dest):
-    with urllib.request.urlopen(url) as r, open(dest, "wb") as out:
-        shutil.copyfileobj(r, out)
+    """Download to a temporary file beside `dest`, moved into place only once complete."""
+    dest = Path(dest)
+    fd, part = tempfile.mkstemp(prefix=dest.name + ".", suffix=".part", dir=dest.parent)
+    try:
+        with urllib.request.urlopen(url) as r, os.fdopen(fd, "wb") as out:
+            shutil.copyfileobj(r, out)
+        os.replace(part, dest)
+    except BaseException:
+        Path(part).unlink(missing_ok=True)
+        raise
+
+
+def zane_home():
+    """Where `zane` keeps installed toolchains: $ZANE_HOME, else ~/.zane."""
+    return Path(os.environ.get("ZANE_HOME") or Path.home() / ".zane")
+
+
+def extract_compiler(archive, tc):
+    """Unpack a compiler release into `tc`, which appears only if every member extracts."""
+    tc.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=tc.name + ".", suffix=".part", dir=tc.parent))
+    try:
+        with tarfile.open(archive) as t:
+            for m in t.getmembers():
+                parts = Path(m.name).parts[1:]  # strip the top directory
+                if not parts:
+                    continue
+                m.name = str(Path(*parts))
+                if sys.version_info >= (3, 12):
+                    t.extract(m, staging, filter="data")
+                else:
+                    t.extract(m, staging)
+        os.replace(staging, tc)
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
 
 
 def install(pins, cache):
-    """Fetch the pinned zane (into `cache`) and compiler (into ~/.zane/toolchains)."""
+    """Fetch the pinned zane (into `cache`) and compiler (into zane_home()/toolchains)."""
     os_, arch = _plat()
     cache = Path(cache).expanduser()
     cache.mkdir(parents=True, exist_ok=True)
@@ -197,22 +234,19 @@ def install(pins, cache):
     if not zane.exists():
         zane.parent.mkdir(exist_ok=True)
         print("downloading zane %s" % pins["zane"], file=sys.stderr)
-        _download(ZANE_URL.format(v=pins["zane"], os=os_, arch=arch), zane)
-        zane.chmod(zane.stat().st_mode | stat.S_IEXEC)
-    tc = Path.home() / ".zane" / "toolchains" / pins["compiler"]
+        part = zane.with_name(zane.name + ".download")
+        _download(ZANE_URL.format(v=pins["zane"], os=os_, arch=arch), part)
+        part.chmod(part.stat().st_mode | stat.S_IEXEC)
+        os.replace(part, zane)
+    tc = zane_home() / "toolchains" / pins["compiler"]
     if not tc.exists():
         print("downloading compiler %s" % pins["compiler"], file=sys.stderr)
         tmp = cache / "compiler.tar.gz"
         _download(COMPILER_URL.format(v=pins["compiler"], os=os_, arch=arch), tmp)
-        tc.mkdir(parents=True)
-        with tarfile.open(tmp) as t:
-            for m in t.getmembers():
-                parts = Path(m.name).parts[1:]  # strip the top directory
-                if not parts:
-                    continue
-                m.name = str(Path(*parts))
-                t.extract(m, tc, filter="data") if sys.version_info >= (3, 12) else t.extract(m, tc)
-        tmp.unlink()
+        try:
+            extract_compiler(tmp, tc)
+        finally:
+            tmp.unlink(missing_ok=True)
     return str(zane), {}
 
 
@@ -220,7 +254,8 @@ def install(pins, cache):
 # Running
 # --------------------------------------------------------------------------
 
-def run(cmd, cwd, env=None, timeout=TIMEOUT):
+def run(cmd, cwd, env=None, timeout=None):
+    timeout = timeout or TIMEOUT
     e = dict(os.environ)
     e.update(env or {})
     try:
@@ -229,8 +264,16 @@ def run(cmd, cwd, env=None, timeout=TIMEOUT):
     except FileNotFoundError:
         return 127, "", "command not found: %s" % cmd[0]
     except subprocess.TimeoutExpired:
-        return 124, "timed out after %ds" % timeout, ""
+        return TIMED_OUT, "timed out after %ds" % timeout, ""
     return p.returncode, p.stdout, p.stderr
+
+
+def executable(cmd):
+    """A path-valued command made absolute, since commands run in other directories;
+    a bare name stays as it is, for PATH lookup."""
+    if os.sep in cmd or (os.altsep and os.altsep in cmd):
+        return str(Path(cmd).resolve())
+    return cmd
 
 
 def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
@@ -296,12 +339,16 @@ def check_example(ex, zane, template, env, keep, workdir):
         if ex.kind == ERROR:
             rc, out, err = run([zane, "check"], proj, env)
             diag = out + err
+            if rc == TIMED_OUT:
+                return "`zane check` timed out:\n" + trim(diag)
             if rc == 0:
                 return "expected `zane check` to fail, but it succeeded"
             if ex.error_text and ex.error_text not in diag:
                 return ("diagnostics do not contain %r:\n%s" % (ex.error_text, trim(diag)))
             return None
         rc, out, err = run([zane, "run"], proj, env)
+        if rc == TIMED_OUT:
+            return "`zane run` timed out:\n" + trim(out + err)
         if rc != 0:
             return "`zane run` exited %d:\n%s" % (rc, trim(out + err))
         if ex.expected is not None and not same_output(out, ex.expected):
@@ -343,7 +390,7 @@ def main(argv=None):
 
     examples = collect(args.paths)
     work = tempfile.mkdtemp(prefix="zane-check-")
-    env, zane, std_tag, compiler = {}, args.zane, None, None
+    env, zane, std_tag, compiler = {}, executable(args.zane), None, None
     try:
         toolchain = Path(__file__).resolve().parent.parent / "toolchain.coda"
         pins = read_coda(toolchain) if toolchain.exists() else {}
