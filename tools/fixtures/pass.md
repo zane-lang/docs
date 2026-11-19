@@ -3,10 +3,12 @@
 ```zane
 package demo;
 
-import std;
+import core$;
 
-fn main() {
-    std.println("hi");
+Unit main() {
+	console Console(@program$console);
+	console!print("hi");
+	return Unit();
 }
 ```
 

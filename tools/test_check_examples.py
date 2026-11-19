@@ -134,7 +134,7 @@ class Integration(unittest.TestCase):
         r = subprocess.run([sys.executable, str(Path(ce.__file__)), "--zane", ZANE,
                             str(FIX / "wrong_output.md")], capture_output=True, text=True)
         self.assertEqual(r.returncode, 1)
-        self.assertRegex(r.stdout, r"wrong_output\.md:1: ")
+        self.assertRegex(r.stdout, r"wrong_output\.md:3: ")
         self.assertIn("0 passed, 1 failed, 0 skipped", r.stdout)
 
 

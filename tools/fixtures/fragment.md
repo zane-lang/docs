@@ -1,3 +1,5 @@
+# Fragment
+
 ```zane fragment
-let x = 1;
+x Int = Int(1);
 ```

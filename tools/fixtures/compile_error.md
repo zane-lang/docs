@@ -1,7 +1,12 @@
+# Compile error
+
 ```zane
 package demo;
 
-fn main() {
-    this is not zane;
+import core$;
+
+Unit main() {
+	x Int = Int(1)
+	return Unit();
 }
 ```
