@@ -123,6 +123,30 @@ class Robustness(unittest.TestCase):
         self.assertNotIn("Traceback", r.stderr)
 
 
+class OutputAndPins(unittest.TestCase):
+    def test_one_trailing_newline_is_ignored_and_no_more(self):
+        self.assertTrue(ce.same_output("hi\n", "hi"))
+        self.assertTrue(ce.same_output("hi", "hi\n"))
+        self.assertFalse(ce.same_output("hi\n\n", "hi"))
+        self.assertFalse(ce.same_output("hi\n\n\n", "hi\n"))
+
+    def test_template_is_moved_to_the_pinned_compiler(self):
+        # A stand-in zane that logs its arguments and makes the files init makes.
+        with tempfile.TemporaryDirectory() as d:
+            log = Path(d) / "log"
+            fake = Path(d) / "zane"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "echo \"$*\" >> %s\n"
+                "if [ \"$1\" = init ]; then mkdir -p \"$2/bin/$2\"; fi\n" % log,
+                encoding="utf-8")
+            fake.chmod(0o755)
+            ce.make_template(str(fake), d, compiler="v0.40")
+            calls = log.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(calls[0], "init tmpl --yes")
+            self.assertEqual(calls[1], "toolchain update v0.40")
+
+
 @unittest.skipUnless(ZANE, "zane is not installed")
 class Integration(unittest.TestCase):
     @classmethod

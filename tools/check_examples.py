@@ -233,12 +233,20 @@ def run(cmd, cwd, env=None, timeout=TIMEOUT):
     return p.returncode, p.stdout, p.stderr
 
 
-def make_template(zane, root, std=None, std_tag=None, env=None):
-    """Create the template project once; returns its directory."""
+def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
+    """Create the template project once; returns its directory.
+
+    `zane init` pins the newest installed compiler, so a pinned `compiler`
+    moves the template to it with `zane toolchain update`.
+    """
     rc, out, err = run([zane, "init", "tmpl", "--yes"], root, env)
     if rc:
         sys.exit("zane init failed:\n" + (out + err))
     proj = Path(root) / "tmpl"
+    if compiler:
+        rc, out, err = run([zane, "toolchain", "update", compiler], proj, env)
+        if rc:
+            sys.exit("zane toolchain update %s failed:\n%s" % (compiler, out + err))
     cmd = [zane, "add", STD_URL] + ([std_tag] if std_tag else []) + ["--from-source"]
     rc, out, err = run(cmd, proj, env)
     if rc:
@@ -270,6 +278,13 @@ def trim(s, n=25):
     return "\n".join("    " + ln for ln in lines)
 
 
+def same_output(actual, expected):
+    """Exact stdout, but for one trailing newline (CONTRIBUTING.md)."""
+    def drop_one(s):
+        return s[:-1] if s.endswith("\n") else s
+    return drop_one(actual) == drop_one(expected)
+
+
 def check_example(ex, zane, template, env, keep, workdir):
     """Return None on success or a failure message."""
     proj = Path(tempfile.mkdtemp(prefix="ex-", dir=workdir))
@@ -289,7 +304,7 @@ def check_example(ex, zane, template, env, keep, workdir):
         rc, out, err = run([zane, "run"], proj, env)
         if rc != 0:
             return "`zane run` exited %d:\n%s" % (rc, trim(out + err))
-        if ex.expected is not None and out.rstrip("\n") != ex.expected.rstrip("\n"):
+        if ex.expected is not None and not same_output(out, ex.expected):
             return ("output differs\n  expected:\n%s\n  actual:\n%s"
                     % (trim(ex.expected), trim(out)))
         return None
@@ -328,19 +343,19 @@ def main(argv=None):
 
     examples = collect(args.paths)
     work = tempfile.mkdtemp(prefix="zane-check-")
-    env, zane, std_tag = {}, args.zane, None
+    env, zane, std_tag, compiler = {}, args.zane, None, None
     try:
         toolchain = Path(__file__).resolve().parent.parent / "toolchain.coda"
+        pins = read_coda(toolchain) if toolchain.exists() else {}
+        compiler = pins.get("compiler")
         if args.install:
-            pins = read_coda(toolchain)
             zane, env = install(pins, "~/.cache/zane-check-examples")
+        if not args.std:
             std_tag = pins.get("std")
-        elif toolchain.exists() and not args.std:
-            std_tag = read_coda(toolchain).get("std")
         if not any(e.kind != FRAGMENT for e in examples):
             print(summary(0, 0, len(examples)))
             return 0
-        template = make_template(zane, work, args.std, std_tag, env)
+        template = make_template(zane, work, args.std, std_tag, env, compiler)
         failures, passed, skipped = check_all(
             examples, zane, template, env, args.jobs, args.keep, work)
         for ex, msg in failures:
