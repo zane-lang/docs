@@ -94,7 +94,6 @@ class Misc(unittest.TestCase):
         self.assertNotIn("nested.md", names)
 
 
-@unittest.skipUnless(ZANE, "zane is not installed")
 class Robustness(unittest.TestCase):
     """Behaviour that must not depend on the platform or on zane being installed."""
 
@@ -124,6 +123,7 @@ class Robustness(unittest.TestCase):
         self.assertNotIn("Traceback", r.stderr)
 
 
+@unittest.skipUnless(ZANE, "zane is not installed")
 class Integration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
