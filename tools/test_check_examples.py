@@ -95,6 +95,35 @@ class Misc(unittest.TestCase):
 
 
 @unittest.skipUnless(ZANE, "zane is not installed")
+class Robustness(unittest.TestCase):
+    """Behaviour that must not depend on the platform or on zane being installed."""
+
+    def test_utf8_files_under_an_ascii_locale(self):
+        with tempfile.TemporaryDirectory() as d:
+            coda = Path(d) / "toolchain.coda"
+            coda.write_text("zane v0.18\n# caf\u00e9\n", encoding="utf-8")
+            code = ("import sys; sys.path.insert(0, %r); import check_examples as c; "
+                    "print(c.read_coda(%r)['zane'])" % (str(Path(__file__).parent), str(coda)))
+            env = dict(__import__("os").environ, LC_ALL="C", PYTHONCOERCECLOCALE="0", PYTHONUTF8="0")
+            r = subprocess.run([sys.executable, "-X", "utf8=0", "-c", code],
+                               capture_output=True, text=True, env=env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.strip(), "v0.18")
+
+    def test_missing_command_is_reported_not_raised(self):
+        rc, out, err = ce.run(["/nonexistent/zane", "check"], ".")
+        self.assertEqual(rc, 127)
+        self.assertIn("command not found: /nonexistent/zane", err)
+
+    def test_missing_zane_fails_cleanly(self):
+        r = subprocess.run([sys.executable, str(Path(__file__).parent / "check_examples.py"),
+                            "--zane", "/nonexistent/zane", str(FIX / "pass.md")],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("command not found: /nonexistent/zane", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+
 class Integration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

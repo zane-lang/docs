@@ -15,6 +15,7 @@ Stdlib only.
 
 import argparse
 import os
+import platform
 import re
 import shutil
 import stat
@@ -166,7 +167,7 @@ def collect(paths):
 def read_coda(path):
     """Minimal coda reader: top-level `key value` lines only."""
     data = {}
-    for raw in Path(path).read_text().splitlines():
+    for raw in Path(path).read_text(encoding="utf-8").splitlines():
         parts = raw.split(None, 1)
         if len(parts) == 2 and not raw.startswith((" ", "\t", "#")):
             data[parts[0]] = parts[1].strip()
@@ -176,7 +177,7 @@ def read_coda(path):
 def _plat():
     os_ = {"linux": "linux", "darwin": "macos"}.get(sys.platform)
     arch = {"x86_64": "x86_64", "amd64": "x86_64", "arm64": "arm64",
-            "aarch64": "arm64"}.get(os.uname().machine.lower())
+            "aarch64": "arm64"}.get(platform.machine().lower())
     if not os_ or not arch:
         sys.exit("check_examples: unsupported platform for --install")
     return os_, arch
@@ -225,6 +226,8 @@ def run(cmd, cwd, env=None, timeout=TIMEOUT):
     try:
         p = subprocess.run(cmd, cwd=cwd, env=e, capture_output=True, text=True,
                            timeout=timeout)
+    except FileNotFoundError:
+        return 127, "", "command not found: %s" % cmd[0]
     except subprocess.TimeoutExpired:
         return 124, "timed out after %ds" % timeout, ""
     return p.returncode, p.stdout, p.stderr
@@ -273,7 +276,7 @@ def check_example(ex, zane, template, env, keep, workdir):
     shutil.copytree(template, proj, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns("out"), symlinks=True)
     mf = main_file(proj)
-    mf.write_text(rename_package(ex.code, mf.parent.name) + "\n")
+    mf.write_text(rename_package(ex.code, mf.parent.name) + "\n", encoding="utf-8")
     try:
         if ex.kind == ERROR:
             rc, out, err = run([zane, "check"], proj, env)
