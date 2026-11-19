@@ -4,26 +4,27 @@ This page covers how Zane manages memory without a garbage collector: value type
 
 ## Two kinds of types
 
-Every type is either a value type or a reference type, and the kind decides
-how it is stored and passed.
+Every type is either a value type or a reference type, and which of the two it
+is determines how its values are stored and passed.
 
 - A **value type** (`struct`, `variant`, `enum`, `Int`, `String`, `List`, …)
-  has no identity. Assigning one copies it, deeply, so no two symbols ever
-  share a value. [Types](types.md#values-are-copied) shows this.
+  has no identity. Assigning a value of a value type copies it deeply, so no
+  two symbols ever share a value. [Types](types.md#values-are-copied) shows this.
 - A **reference type** (marked `#`: `#struct`, `#variant`, and `ListRef`,
   `ArrayRef`) has identity. Each object has exactly one **owner**, and other
-  code reaches it through **references**, written `&T`, which never own it.
+  code reaches the object through **references**, written `&T`, which never
+  own the object.
 
-There is no garbage collector and no reference counting. Each object is
-destroyed at a point the program text fixes: when the scope of its owner
+There is no garbage collector and no reference counting. The program text
+fixes the point at which each object is destroyed: when the scope of its owner
 ends, when its owner is overwritten, or when it is removed from a `ListRef`
 without being moved out. Every scope gets its own memory region, which is
-released as a whole when it ends.
+released as a whole when the scope ends.
 
 ## Owners and references
 
-A symbol of a reference type owns its object. A reference to it is made by
-storing the owner in an `&` slot:
+A symbol of a reference type owns its object. Storing the owner in an `&` slot
+makes a reference to the object:
 
 ```zane
 package hello;
@@ -41,7 +42,7 @@ Unit deposit(this Account, amount Int) mut {
 	return Unit();
 }
 
-/// A teller keeps a reference to the account at its desk.
+/// A teller holds a reference to the account at the teller's desk.
 type Teller = #struct {
 	desk &Account;
 }
@@ -68,8 +69,8 @@ Alice has 105
 `view` and `teller.desk` see the deposit because they refer to the same
 object as `alice`. A reference is used exactly like its owner, with no
 dereferencing syntax, and it is never null. A value type may not hold an
-`&`, because a value is copied freely and its copies would carry the
-reference anywhere:
+`&`, because values are copied freely, and the copies would carry the
+reference to places that outlive the owner:
 
 ```zane error
 // error: is a value type, so its member
@@ -92,9 +93,9 @@ Unit main() {
 
 ## A reference never outlives its owner
 
-The compiler checks every store of a reference against the scopes of what it
-names. A reference may not be stored anywhere that lives longer than its
-owner, so it can never dangle:
+The compiler checks every store of a reference against the scope of the owner
+it refers to. A reference may not be stored anywhere that lives longer than
+its owner, so a reference can never dangle:
 
 ```zane error
 // error: whose block ends before
@@ -118,8 +119,8 @@ Unit main() {
 }
 ```
 
-The check compares the scopes the symbols are declared in, nothing more, so
-no function signature carries lifetime annotations.
+The check compares only the scopes in which the owner and the reference are
+declared, so no function signature needs lifetime annotations.
 
 ## Settled and roaming owners
 
@@ -150,13 +151,13 @@ type Bank = #struct {
 }
 Bank() => init{ accounts = ListRef(Account); }
 
-/// `^Account`: takes the owner.
+/// The `^Account` parameter takes ownership of the account.
 Unit open(this Bank, account ^Account) mut {
 	this.accounts!push(account);
 	return Unit();
 }
 
-/// A bare reference-type parameter borrows it for the call.
+/// A reference-type parameter without `^` or `&` borrows its argument for the call.
 Int balanceOf(a Account) => a.balance;
 
 Unit main() {
@@ -225,7 +226,8 @@ Unit main() {
 
 ## How arguments are passed
 
-The parameter's type says how a reference-type argument travels:
+How a reference-type argument is passed depends on how the type of its
+parameter is written:
 
 | Parameter | Mode | The caller… |
 |---|---|---|
@@ -233,12 +235,13 @@ The parameter's type says how a reference-type argument travels:
 | `a ^Account` | take | hands the object over; a roaming symbol passed here is spent |
 | `a &Account` | reference | keeps the object; the callee may store the reference |
 
-A value-type argument is always borrowed, and a method's subject always is.
-Nothing else in the same call may write what a call borrows, so no other part
-of that call changes the argument under the callee. Spawned calls are the one
-way to share a value with a writer: a spawned call reading a value another
-spawn is changing reads a coherent snapshot of it, and two reads may see
-different values ([Concurrency](concurrency.md)).
+A value-type argument is always borrowed, and so is a method's subject. No
+other part of the same call may write a value that the call borrows, so a
+borrowed argument can't change under the callee. Spawned calls are the only
+way to share a value with code that writes it: when a spawned call reads a
+value that another spawned call is changing, the read sees a coherent snapshot
+of the value, and two reads may see different values
+([Concurrency](concurrency.md)).
 
 ## In the spec
 

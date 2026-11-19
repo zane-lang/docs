@@ -1,8 +1,8 @@
 # Your first project
 
-This page creates a program, runs it, adds the standard library, and then makes a library with tests.
+This page shows how to create and run a program, add the standard library, and then make a library with tests.
 
-It assumes `zane` and a compiler are installed ([Install Zane](install.md)).
+This page assumes that `zane` and a compiler are installed ([Install Zane](install.md)).
 
 ## Create and run a program
 
@@ -18,14 +18,14 @@ whether to start a Git repository); `--yes` accepts every default. It creates:
 ```text
 hello/
   zane.coda          the manifest: compiler version and dependencies
-  zane-lock.coda     the lock file: the exact commits those resolve to
+  zane-lock.coda     the lock file: the exact commits of the compiler and dependencies
   bin/hello/main.zn  the program
   .gitignore         lists out/, where builds go
 ```
 
 `zane run` builds the program and runs it, printing `hello world`. The
-generated `main.zn` writes everything out with the compiler's built-in names,
-such as `@primitives$String`, because a new project has no dependencies yet.
+generated `main.zn` uses only the compiler's built-in names, such as
+`@primitives$String`, because a new project has no dependencies yet.
 
 ## Add the standard library
 
@@ -68,10 +68,11 @@ Hello, Zane!
 and run it again with `zane run`. The first line of every source file names
 its package: here `hello`, the directory under `bin/`. `import core$;` makes
 the names of `core` usable without a prefix. `main` is where the program
-starts. `Console(@program$console)` wraps the program's console, which the
-program receives from the language rather than reaching for a global, so that
-code you never hand it to cannot print ([Effects](tour/effects.md)).
-`"\%name"` puts a value into a string.
+starts. `Console(@program$console)` creates a `Console` from the program's
+console. The language gives the console to the program as `@program$console`
+instead of providing a global, so code that you never give the console to
+cannot print ([Effects](tour/effects.md)). `"\%name"` inserts the value of
+`name` into the string.
 
 The [language tour](tour/README.md) explains each of these in turn.
 
@@ -85,8 +86,8 @@ The [language tour](tour/README.md) explains each of these in turn.
 | `zane test` | Builds and runs every test package in `test/` |
 | `zane clean` | Deletes `out/` |
 
-They work from any directory inside the project. [The `zane`
-command](reference/cli.md) lists them all.
+Each command works from any directory inside the project. [The `zane`
+command](reference/cli.md) lists every command.
 
 ## A library and its tests
 
@@ -98,9 +99,9 @@ cd shapes
 zane add https://github.com/zane-lang/std --from-source
 ```
 
-This creates `lib/shapes/shapes.zn`, the library package `shapes`, and
-`test/shapes/main.zn`, a test package for it. Put this in
-`lib/shapes/shapes.zn`:
+`zane init --lib` creates `lib/shapes/shapes.zn`, the library package
+`shapes`, and `test/shapes/main.zn`, a test package for the library. Put this
+in `lib/shapes/shapes.zn`:
 
 ```zane fragment
 package shapes;
@@ -122,7 +123,8 @@ Bool isSquare(this Rect) => this.width == this.height;
 
 Every declaration is public unless its name starts with `_`. A test package
 uses the library as any other user does, by importing it. Put this in
-`test/shapes/main.zn`; its first line is always `package test;`:
+`test/shapes/main.zn`; the first line of a test package is always
+`package test;`:
 
 ```zane fragment
 package test;
@@ -159,7 +161,7 @@ ok   not square
 1 test package passed.
 ```
 
-A project can hold library packages, programs and tests together: add a
-directory under `bin/` and it is a program. [Testing](guides/testing.md) says
-more about test packages, and [Projects](guides/projects.md) about the files
-`zane` keeps.
+A project can hold library packages, programs and tests together: each
+directory under `bin/` is a program. [Testing](guides/testing.md) covers test
+packages in more depth, and [Projects](guides/projects.md) describes the files
+`zane` keeps in a project.

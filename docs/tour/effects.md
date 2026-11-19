@@ -4,29 +4,30 @@ This page covers what a call is allowed to change, and how a program reaches the
 
 ## What a call may write
 
-Zane has one effect modifier, `mut`, and the kind of a function says what it
-may write:
+Zane has one effect modifier, `mut`. What a function may write depends on
+whether it is a `mut` method, a method without `mut`, or a plain function:
 
 | Kind | Called with | May write |
 |---|---|---|
-| `mut` method | `subject!name(…)` | its subject, and what is reached through it |
+| `mut` method | `subject!name(…)` | its subject, and anything reached through its subject |
 | method without `mut` | `subject:name(…)` | nothing its caller can see |
 | function | `name(…)` | nothing its caller can see |
 
-Every function may change its own local symbols. What it cannot do is reach
-out: parameters other than the subject are read-only, there are no global
-variables, and a package holds constants only. So outside the root package,
-the signature alone tells you what a call can change, however deep its own
-calls go.
+Every function may change its own local symbols, but nothing outside them
+except through a `mut` method's subject: parameters other than the subject are
+read-only, there are no global variables, and a package holds constants only.
+So outside the root package, a function's signature alone shows what a call to
+it can change, however deep the calls it makes go.
 
-The root package, the one that declares `main`, is the exception: any
-function or method there may also write the program's console and runtime,
-which it reaches through `@program$`, and the foreign capabilities its foreign
-variables give. That is why `main`, a function, can print. A parameter stays
-read-only even there, as the next example shows.
+The root package, the package that declares `main`, is the exception: any
+function or method in the root package may also write the program's console
+and runtime, which it reaches through `@program$`, and the foreign
+capabilities that the root package's foreign variables provide. That is why
+`main`, a function, can print. A parameter stays read-only even in the root
+package, as the next example shows.
 
-That bound is checked. A function that tries to write a parameter is
-rejected:
+The compiler enforces these limits. A function that tries to write a parameter
+is rejected:
 
 ```zane error
 // error: is a parameter, which is read-only
@@ -46,9 +47,10 @@ Unit main() {
 }
 ```
 
-A function that writes nothing may still read the world outside the program,
-as one that reads the program's arguments does. The compiler sees which calls
-make such reads, from their bodies and the calls they make. A call that writes
+A function that writes nothing may still read state outside the program; a
+function that reads the program's arguments is one example. The compiler works
+out which calls make such reads from each function's body and the calls the
+function makes. A call that writes
 nothing and reads nothing outside the program has no effect besides its
 result, so the compiler is free to run it in parallel or ahead of time.
 
@@ -58,8 +60,8 @@ Printing, like any interaction with the world outside the program, goes
 through a **capability**: an object whose methods reach that outside state.
 Capabilities are never global. The program receives its console and runtime
 as `@program$console` and `@program$runtime`, which only the program's own
-package (the one with `main`) can name. Everything else gets them by being
-handed them.
+package (the package with `main`) can name. All other code gets them only when
+they are passed to it.
 
 A component that needs to print keeps a reference to the console, and writes
 through it from a `mut` method:
@@ -97,15 +99,15 @@ Unit main() {
 [app] result 144
 ```
 
-`compute` is a plain function that was handed nothing, so it cannot print, and
+`compute` is a plain function that was given no console, so it cannot print, and
 `logger!log` can print only because the logger was given the console. A
 library package is never handed `@program$`, so a library you depend on can
 only reach what you pass it.
 
 ## The runtime
 
-`Runtime(@program$runtime)` gives the program's command-line arguments, and
-sizes the thread pool:
+`Runtime(@program$runtime)` provides the program's command-line arguments and
+sets the size of the thread pool:
 
 ```zane
 package hello;

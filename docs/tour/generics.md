@@ -38,16 +38,16 @@ answer = 42
 `Pair<String, Int>` and `Pair<Int, Bool>` are two separate concrete types,
 each with its own fixed layout.
 
-A function, method or constructor has no `< >` header of its own. It
-introduces a parameter where the parameter first appears with its concept:
-`first A Type` introduces `A`, and after that `A` is written bare. The call
-writes no `< >` either: `Pair(String("answer"), Int(42))` infers `A` and `B`
+A function, method or constructor has no `< >` header of its own. Instead, a
+type parameter is introduced where it first appears with its concept:
+`first A Type` introduces `A`, and after that `A` is written bare. A call has
+no `< >` either: `Pair(String("answer"), Int(42))` infers `A` and `B`
 from the arguments.
 
 ## Generic functions
 
-A generic function is checked for each type it is used with, so its body can
-use any operation those types have:
+The compiler checks a generic function separately for each type it is called
+with, so the function's body can use any operation that those types have:
 
 ```zane
 package hello;
@@ -86,14 +86,16 @@ Unit main() {
 1.5
 ```
 
-Calling it with a list of a type that has no `<` is a compile-time error that
-names both the `<` and the call that asked for it.
+Calling `largest` with a list whose element type has no `<` is a
+compile-time error, and the error message names both the missing `<` and the
+call that needs it.
 
 ## Passing a type as an argument
 
 A parameter of type `Type` takes a type as an ordinary argument. That is how
-an empty container is made: `List(Int)` is an empty `List<Int>`, because
-nothing else would tell the constructor what the elements are.
+an empty container is made: `List(Int)` is an empty `List<Int>`, because an
+empty list has no elements from which the constructor could learn the element
+type.
 
 ```zane
 package hello;
@@ -130,8 +132,8 @@ second, 1 left
 ## Number parameters
 
 A parameter written `n @concepts$Int` ranges over whole numbers known at
-compile time. `Array<T, n>` uses one for its length, which is part of its
-type:
+compile time. `Array<T, n>` uses a number parameter for its length, so the
+length is part of the array's type:
 
 ```zane
 package hello;
@@ -175,7 +177,7 @@ Unit main() {
 with its elements. `ListRef` holds owners of reference types, which
 [Memory](memory.md) explains. The [`core`
 library](https://github.com/zane-lang/std/blob/main/docs/core/containers.md) pages list
-their methods.
+the containers' methods.
 
 ## In the spec
 

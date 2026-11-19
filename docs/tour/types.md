@@ -4,8 +4,8 @@ This page covers structs, their constructors, value semantics, operators on your
 
 ## Structs
 
-A `struct` groups named fields. The type body holds only fields; its
-constructors and methods are declared next to it, at package scope:
+A `struct` groups named fields. The type body holds only fields; the type's
+constructors and methods are declared next to the type, at package scope:
 
 ```zane
 package hello;
@@ -51,7 +51,7 @@ type.
 ## Values are copied
 
 A plain `struct` is a **value type**: assigning it or storing it copies the
-whole value, so two symbols never share one.
+whole value, so two symbols never share a value.
 
 ```zane
 package hello;
@@ -129,10 +129,11 @@ Fists 2
 A statement that ends in `}`, like `pistol Weapon{}`, is closed by that brace
 and takes no `;`.
 
-A constructor marked `implicit` and taking one argument is a conversion:
-where a value is passed as an argument, the compiler calls it for you. That
-is how `core` turns the literal `"text"` into a `String` when you pass it, and
-it works the same for your own types:
+A constructor marked `implicit` and taking one argument is a conversion: when
+an argument has the constructor's parameter type and the function expects the
+constructor's type, the compiler calls the constructor for you. That is how
+`core` turns the literal `"text"` into a `String` when you pass it, and
+implicit constructors work the same way for your own types:
 
 ```zane
 package hello;
@@ -207,8 +208,8 @@ never changes what `a + b` means.
 
 ## `type` and `alias`
 
-`type` declares a new, distinct type: a `Meters` is not a `Float`, even if
-it holds one. `alias` gives another name to an existing type, and the two
+`type` declares a new, distinct type: a `Meters` is not a `Float`, even
+though a `Meters` holds a `Float`. `alias` gives another name to an existing type, and the two
 names are interchangeable:
 
 ```zane

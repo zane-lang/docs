@@ -4,36 +4,37 @@ This guide covers test packages: where they live, what they can import, and how 
 
 ## Test packages
 
-Tests live in `test/`. Each directory directly in it is a **test package**,
-and every one of its files starts with `package test;`. A test package is a
+Tests live in `test/`. Each directory directly inside `test/` is a **test
+package**, and every file of a test package starts with `package test;`. A test package is a
 program: it declares `main`, and `zane test` builds and runs it.
 
 ```text
 lib/shapes/shapes.zn       the library package `shapes`
-test/shapes/main.zn        a test package for it
+test/shapes/main.zn        a test package for `shapes`
 lib/shapes/solid/          a subpackage, `shapes`'s `solid`
-test/shapes/solid/main.zn  its own test package, mirroring the path under lib/
+test/shapes/solid/main.zn  the test package for `solid`, at the same path as under lib/
 ```
 
-A test package uses a library as any other user does: it imports it and
-reaches only its public names. It may import every library package of its
-project, including private ones whose names start with `_`, and the packages
+A test package uses a library the way any other user does: it imports the
+library and can use only the library's public names. A test package may
+import every library package of its project, including private packages whose
+names start with `_`, and the packages
 of `deps` and `test-deps`. Only test packages may import `test-deps`.
-[Your first project](../first-project.md#a-library-and-its-tests) builds one
-step by step.
+[Your first project](../first-project.md#a-library-and-its-tests) builds a
+test package step by step.
 
 ## Running tests
 
 ```sh
 zane test                 # every test package
-zane test shapes          # the one in test/shapes/
-zane test shapes -- -v    # pass arguments to it
+zane test shapes          # only the test package in test/shapes/
+zane test shapes -- -v    # pass arguments to that test package
 ```
 
 Each test package is built and run the way `zane run` runs a program, as the
 root of its own build, with the project's library packages compiled from
-`lib/`. `zane test` names each package as it starts, then says how many
-passed:
+`lib/`. `zane test` prints each package's name as the package starts, then
+prints how many packages passed:
 
 ```text
 $ zane test
@@ -45,14 +46,16 @@ ok   not square
 1 of 2 test packages failed: edge
 ```
 
-A test package fails when its program exits with a status other than 0, as
-one that stops on an index out of range does. `zane test` then exits with 1.
-Run on one package, it exits with that package's status.
+A test package fails when its program exits with a status other than 0; a
+program that stops on an index out of range is one example. If any test
+package fails, `zane test` exits with 1. When `zane test` runs a single
+package, it exits with that package's status.
 
 ## Writing checks
 
-How a test reports is up to the test package. A small helper that prints each
-check is enough to start with. As `test/shapes/main.zn`:
+Each test package decides how to report its results. A small helper that
+prints the result of each check is enough to start with; for example, as
+`test/shapes/main.zn`:
 
 ```zane fragment
 package test;

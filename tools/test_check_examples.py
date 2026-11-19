@@ -139,7 +139,7 @@ class OutputAndPins(unittest.TestCase):
         self.assertFalse(ce.same_output("hi\n\n\n", "hi\n"))
 
     def test_template_is_moved_to_the_pinned_compiler(self):
-        # A stand-in zane that logs its arguments and makes the files init makes.
+        # A stand-in zane that logs its arguments and creates the files `zane init` creates.
         with tempfile.TemporaryDirectory() as d:
             log = Path(d) / "log"
             fake = Path(d) / "zane"

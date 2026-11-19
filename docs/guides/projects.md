@@ -8,7 +8,7 @@ A project is a directory with a `zane.coda` at its root:
 
 ```text
 zane.coda        the manifest: what the project wants
-zane-lock.coda   the lock file: the exact commits that resolves to
+zane-lock.coda   the lock file: the exact commits the manifest resolves to
 lib/             library packages, which other projects can import
 bin/             program packages, each built into a program
 test/            test packages
@@ -35,19 +35,18 @@ deps [
 ```
 
 - `zane-version` is the compiler release that builds the project.
-- `version-pattern` says which of this project's own versions can stand in
-  for each other (below). It is chosen when the project is created and stays
-  fixed.
-- `deps` lists the dependencies, each under a **key**: the name commands use
-  for it. `version` is the tag it is pinned to, and `from` says where its code
-  comes from: `release` for the prebuilt archive the library publishes,
+- `version-pattern` defines which versions of this project can replace one
+  another (below). It is chosen when the project is created and stays fixed.
+- `deps` lists the dependencies, each under a **key**: the name that `zane`
+  commands use for the dependency. `version` is the tag the dependency is
+  pinned to, and `from` gives the source of its code: `release` for the prebuilt archive the library publishes,
   `source` to compile it in your project, or a local path such as
   `../geometry`.
 
 A `test-deps` table, with the same columns, holds dependencies that only the
 test packages use. `fixed-region` and `spawned-fixed-region` (such as
-`fixed-region 1GiB`) set how much memory a program's nested scopes, and each
-spawned call's, may take.
+`fixed-region 1GiB`) set how much memory a program's nested scopes may take,
+and how much each spawned call's nested scopes may take.
 
 ## The lock file
 
@@ -60,8 +59,9 @@ resolutions [
 ]
 ```
 
-Each pinned tag is recorded with the commit it pointed to when it was added,
-and `zane-commit` does the same for the compiler. A tag that later points
+The lock file records each pinned tag with the commit that the tag pointed to
+when the dependency was added, and `zane-commit` records the compiler's commit
+the same way. A tag that later points
 somewhere else is refused as a security error, unless you accept the move
 with `--accept-tag-move`. A package is identified by its repository URL; the
 key is only a local label.
@@ -70,15 +70,15 @@ key is only a local label.
 
 | Command | What it does |
 |---|---|
-| `zane add <url> [tag]` | Depends on a library at its newest tag, or the one named, and prints the `import` lines for its packages |
-| `zane add <url> --from-source` | The same, compiled in your project instead of linked from a release |
-| `zane add <url> --test` | Adds it to `test-deps` |
-| `zane update [key [tag]]` | Moves one dependency, or all of them, to the newest tag or the one named |
+| `zane add <url> [tag]` | Depends on a library at its newest tag or at the tag you name, and prints the `import` lines for the library's packages |
+| `zane add <url> --from-source` | Adds the library the same way, but compiles it in your project instead of linking it from a release |
+| `zane add <url> --test` | Adds the library to `test-deps` |
+| `zane update [key [tag]]` | Moves one dependency, or all of them, to the newest tag or to the tag you name |
 | `zane remove <key>` | Drops a dependency, and warns about imports that still use it |
 | `zane dev <key> <path>` | Compiles the dependency from a local checkout while you work on both |
-| `zane dev off <key>` | Goes back to its release |
+| `zane dev off <key>` | Switches the dependency back to its release |
 | `zane tree` | Shows the resolved dependency graph |
-| `zane fetch` | Downloads what a build needs, so the next one works offline |
+| `zane fetch` | Downloads everything a build needs, so the next build works offline |
 
 `zane tree` for the project above prints:
 
@@ -90,42 +90,43 @@ hello
 A package's code imports a dependency's packages by their own names, such as
 `import core$;`, never by the key. When two dependencies have packages of the
 same name, `zane add --rename pkg=name` or `zane rename <key> <pkg> <name>`
-imports one under another name.
+imports one of the packages under another name.
 
-Every dependency's own dependencies are fetched as releases at the versions it
-pinned. Two versions of the same library can be linked into one program side
-by side; `zane remap <url>` instead links the versions its `version-pattern`
-says are interchangeable as one.
+Every dependency's own dependencies are fetched as releases, at the versions
+that dependency pinned. Two versions of the same library can be linked into
+one program side by side; `zane remap <url>` instead links a single version in
+place of all the versions that the library's `version-pattern` marks as
+interchangeable.
 
 ## Versions
 
 A release is a Git tag such as `v0.15`. The version pattern `v*.+.++` reads
 "the first number must match (`*`); otherwise prefer the highest second
-number (`+`), then the highest third (`++`)". It is what lets `zane remap`
-pick one version for everyone who depends on a library.
+number (`+`), then the highest third (`++`)". The pattern lets `zane remap`
+pick one version for every project that depends on the library.
 
 Fetched packages are kept in a cache shared by all projects, under
-`~/.zane/packages`. `zane cache list` shows it and `zane cache clean` empties
-it.
+`~/.zane/packages`. `zane cache list` shows the cache's contents, and
+`zane cache clean` empties the cache.
 
 ## The compiler a project uses
 
 Each project pins its compiler, so projects on different compilers build side
-by side. Installing a newer compiler (`zane toolchain install`) changes no
-project. To move one:
+by side. Installing a newer compiler (`zane toolchain install`) doesn't change
+any project. To move a project to another compiler:
 
 ```sh
 zane toolchain update          # the newest release of the project's major version
-zane toolchain update v0.40    # or the one named
+zane toolchain update v0.40    # or the release you name
 ```
 
-This checks the dependency graph against the new compiler before changing
-`zane-version` and `zane-commit`.
+`zane toolchain update` checks the dependency graph against the new compiler
+before changing `zane-version` and `zane-commit`.
 
-To build with a compiler you built yourself, set `ZANE_COMPILER` to its
-path; it takes the place of the pinned one. When the pinned compiler is not
-installed, `zane` falls back to a `zanec` on your `PATH`. Neither is checked
-against the pin.
+To build with a compiler you built yourself, set `ZANE_COMPILER` to that
+compiler's path; `zane` then uses it instead of the pinned compiler. When
+`ZANE_COMPILER` is unset and the pinned compiler is not installed, `zane` uses
+a `zanec` on your `PATH`. `zane` checks neither compiler against the pin.
 
 ## In the spec
 

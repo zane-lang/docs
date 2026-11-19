@@ -42,7 +42,7 @@ further, and the caller must handle it. `expr ?? value` is the shortest
 handler: when the call aborts, `value` is used instead.
 
 A failure that carries no information has the abort type `Unit`, and aborts
-with `abort Unit();`. `core`'s `parseInt` is one:
+with `abort Unit();`. `core`'s `parseInt` is such a function:
 
 ```zane
 package hello;
@@ -95,7 +95,7 @@ Int?DivError divide(a Int, b Int) {
 	return a / b;
 }
 
-/// Passes a failure on: the handler aborts in turn.
+/// Passes a failure on to its caller: the handler aborts with the same value.
 Int?DivError percent(a Int, b Int) {
 	q Int = divide(a * 100, b) ? e {
 		abort e;
@@ -121,9 +121,9 @@ failed: division by zero
 25%
 ```
 
-There is no operator that passes a failure on silently: a handler that wants
-the caller to deal with it writes `abort` itself, so every place a failure
-crosses is visible in the code.
+There is no operator that passes a failure on silently: a handler that passes
+a failure to its own caller must write `abort`, so the code shows every place
+a failure passes through.
 
 ## Handling is required
 
@@ -142,13 +142,13 @@ Unit main() {
 }
 ```
 
-The abort type is part of the signature, so changing what a function can fail
-with is a change every caller sees.
+The abort type is part of the signature, so changing a function's abort type
+changes the signature that every caller depends on.
 
 ## Program errors
 
 Some mistakes are not failures a caller can handle. Reading a list at a
-position it does not have stops the program: the runtime writes `index out of
+position outside the list stops the program: the runtime writes `index out of
 range` to standard error and exits with status 1 (compiler
 [divergence 10](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#10-an-index-out-of-range-stops-the-program)).
 
@@ -158,5 +158,6 @@ range` to standard error and exits with status 1 (compiler
   [abort types](https://github.com/zane-lang/spec/blob/main/spec/error-handling.md#2-core-concepts),
   [call-site handling](https://github.com/zane-lang/spec/blob/main/spec/error-handling.md#3-call-site-handling)
   and [`resolve`](https://github.com/zane-lang/spec/blob/main/spec/error-handling.md#4-the-resolve-keyword);
-  its last sections compare it with C, Go, exceptions, Rust, Swift and Zig
+  the chapter's last sections compare Zane's error handling with C, Go,
+  exceptions, Rust, Swift and Zig
 - The story behind it: [failure as a second return path](https://github.com/zane-lang/spec/blob/main/stories/error-handling.md)

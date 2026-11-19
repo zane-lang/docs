@@ -4,10 +4,10 @@ This page covers `spawn`, which runs a call on another thread, and the rules tha
 
 ## `spawn`
 
-Writing `spawn` before a function or method call runs it on the program's
-thread pool while the code after it carries on. A symbol bound to a spawned
-call holds its result once the call finishes, and reading it waits until
-then:
+Writing `spawn` before a function or method call runs the call on the
+program's thread pool while the code after the call carries on. A symbol bound
+to a spawned call holds the call's result once the call finishes, and reading
+the symbol waits until then:
 
 ```zane
 package hello;
@@ -34,15 +34,16 @@ Unit main() {
 75025 6765
 ```
 
-There is no `async` or `await`, and a function does not change its type to
-be spawned: `spawn` marks the call, not the function.
+There is no `async` or `await`, and a function's type is the same whether or
+not a call to it is spawned: `spawn` marks the call, not the function.
 
 ## Spawned writes
 
 A spawned `mut` method may change its subject when the subject is a value
 type, and only one running spawn may write a given place at a time. The
 scope that spawned the work stays alive until every spawn in it has
-finished, so the objects that work uses are never destroyed under it:
+finished, so the objects the spawned calls use are never destroyed while those
+calls run:
 
 ```zane
 package hello;
@@ -80,13 +81,13 @@ Unit main() {
 ```
 
 The block given to `do` ends only once both spawns are done, so the line
-after it sees both sums. A lambda captures nothing, so a spawned call can
-reach only what it is passed.
+after the block sees both sums. A lambda captures nothing, so a spawned call
+can reach only what is passed to it.
 
-On a `Runtime`, `runtime!setThreads(Int(4)) ?? Unit();` sizes the thread
-pool. It aborts for a count below one, so the call needs a handler
-([Errors](errors.md)). Spawning a
-worker (`spawn subject!setInterval(…)`) runs it in the background; the
+On a `Runtime`, `runtime!setThreads(Int(4)) ?? Unit();` sets the size of the
+thread pool. `setThreads` aborts for a count below one, so the call needs a
+handler ([Errors](errors.md)). Spawning a worker
+(`spawn subject!setInterval(…)`) runs the worker in the background; the
 compiler's runtime keeps a pool thread for each waiting worker (compiler
 [divergence 11](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#11-a-spawned-workers-wait-holds-its-pool-thread)).
 

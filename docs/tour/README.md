@@ -2,7 +2,7 @@
 
 The tour walks through Zane one topic at a time, each page built from small programs you can run.
 
-Read the pages in order; each builds on the ones before it.
+Read the pages in order; each page builds on the pages before it.
 
 1. [Basics](basics.md): a program, symbols, numbers, strings
 2. [Functions and methods](functions.md): methods and their subject, `:` and `!` calls, overloading, lambdas
@@ -16,9 +16,9 @@ Read the pages in order; each builds on the ones before it.
 10. [Packages](packages.md): imports and privacy
 11. [Concurrency](concurrency.md): `spawn` and its safety rules
 
-Each page links the sections of the
+Each page links to the sections of the
 [specification](https://github.com/zane-lang/spec/blob/main/README.md) that
-state its rules precisely. Calling C from Zane is covered by the spec's
+state the page's rules precisely. Calling C from Zane is covered by the spec's
 [FFI chapter](https://github.com/zane-lang/spec/blob/main/spec/ffi.md) and
 the compiler's
 [FFI design](https://github.com/zane-lang/compiler/blob/main/docs/design/ffi.md).

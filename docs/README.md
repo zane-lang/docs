@@ -7,14 +7,15 @@ These pages teach Zane to a programmer who already knows another language: how t
 Zane is a systems programming language that compiles to native code. Memory
 is managed deterministically, with no garbage collector and no lifetime
 annotations: every object has one owner, references can never dangle, and
-everything a scope created is destroyed when the scope ends. A call shows at
-its call site whether it may change what it is called on, and code reaches
-the console and other outside state only through objects it is handed.
+every object a scope creates is destroyed when that scope ends. At each call
+site, `!` or `:` shows whether the method may change its subject:
+`list!push(x)` may change `list`, and `list:size()` may not. Code can reach
+the console and other outside state only through objects it is given.
 
-Much of what other languages build in is ordinary Zane code here. `Int`,
-`String`, `List`, `if`, `else` and loops are declared in the `core` package
-of the standard library, in Zane, on top of a small set of compiler
-intrinsics.
+Many features that other languages build into the compiler are ordinary Zane
+code. `Int`, `String`, `List`, `if`, `else` and loops are declared in the
+`core` package of the standard library, written in Zane on top of a small set
+of compiler intrinsics.
 
 ## Where to start
 
@@ -29,7 +30,7 @@ intrinsics.
 
 - **Spec** is the
   [language specification](https://github.com/zane-lang/spec/blob/main/README.md):
-  the precise rules. Each tour page links the sections it summarizes.
+  the precise rules. Each tour page links to the spec sections it summarizes.
 - **Stories** are the
   [design stories](https://github.com/zane-lang/spec/tree/main/stories): why
   the language looks the way it does.

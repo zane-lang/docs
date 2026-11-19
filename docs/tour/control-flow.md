@@ -5,22 +5,23 @@ This page covers branching, loops, early exits and workers, which in Zane are or
 ## Blocks
 
 A call may end with a **block**, a run of statements in braces written after
-its parentheses. The function decides when, and how often, the block runs.
+its parentheses. The called function decides when the block runs, and how
+many times.
 `if`, `else`, the counting loop `to` and the rest of this page are declared
 that way in `core`'s
 [`controlflow.zn`](https://github.com/zane-lang/std/blob/main/lib/core/controlflow.zn);
 the language has no `if` or `while` keyword.
 
-A block may use and change the symbols around it. It is not a value: it
+A block may use and change the symbols around it. A block is not a value: it
 cannot be stored or returned, and it runs only during the call it is passed
-to. A `return` written inside a block returns from the function that contains
-it.
+to. A `return` written inside a block returns from the function in which the
+block is written.
 
 ## `if`, `elif` and `else`
 
-`if` runs its block when the condition holds, and returns whether it did.
-Keep that `Bool` to continue the chain with `elif` and `else`, which are
-methods on it:
+`if` runs its block when the condition holds, and returns a `Bool` that
+records whether the block ran. Keep that `Bool` to continue the chain with
+`elif` and `else`, which are methods on `Bool`:
 
 ```zane
 package hello;
@@ -61,7 +62,7 @@ warm
 ```
 
 `elif` is called with `!` because it updates the chain's `Bool` to record
-that a branch ran; `else` only reads it. When the result is not needed, an
+that a branch ran; `else` only reads the `Bool`. When the result is not needed, an
 `if` is written as a statement on its own.
 
 ## Counting with `to`
@@ -93,9 +94,10 @@ i = 3, total = 6
 i = 4, total = 10
 ```
 
-The loop starts from whatever value its counter holds. Positions in lists,
-arrays and strings start at 1: a list of `n` elements has positions `1` to
-`n`, so a count over one starts its counter at `Int(1)`.
+The loop starts from the value the counter holds when the loop begins.
+Positions in lists, arrays and strings start at 1: a list of `n` elements has
+positions `1` to `n`, so a loop over a list's positions starts its counter at
+`Int(1)`.
 
 Every loop runs a known number of times. A search that stops early returns
 from inside the block:
@@ -133,8 +135,8 @@ Unit main() {
 ## `guard` and `do`
 
 `guard(condition)` ends the block it is called in when the condition holds.
-In a loop, that skips the rest of the current pass. `do` runs a block once,
-which gives a `guard` a block to end:
+In a loop, that skips the rest of the current pass. `do` runs its block
+once, so a `guard` inside a `do` block can end that block early:
 
 ```zane
 package hello;
@@ -167,16 +169,17 @@ Unit main() {
 done
 ```
 
-The spec has `guard` end the whole function that calls it; the compiler ends
-the block instead and accepts `guard` only inside a block (compiler
+In the spec, `guard` ends the whole function that calls it; the compiler
+instead ends the block and accepts `guard` only inside a block (compiler
 [divergence 6](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#6-an-exit-ends-the-run-of-a-block)).
 
 ## Workers: loops without a count
 
-Work that runs until its own state says it is finished is a **worker**:
-`subject!work(step)` calls the function value `step` on the subject, again
-and again, while it returns `true`. The step is a lambda that takes the
-subject as `this`, so all the state it carries is in plain sight:
+A **worker** repeats a step until the step reports that the work is
+finished: `subject!work(step)` calls the function value `step` on the
+subject again and again, for as long as `step` returns `true`. The step is a
+lambda that takes the subject as `this`, so all of the worker's state is in
+the subject's fields, in plain sight:
 
 ```zane
 package hello;
@@ -212,14 +215,15 @@ Unit main() {
 6 reaches 1 in 8 steps
 ```
 
-`setInterval(every, step)` does the same and waits `every` (a `Duration`, such
-as `Duration.milliseconds(16)`) between steps.
+`setInterval(every, step)` works like `work`, and waits `every` (a `Duration`,
+such as `Duration.milliseconds(16)`) between steps.
 
 ## Writing your own
 
 Control flow is ordinary code, so you can declare more of it. A parameter of
 type `@concepts$Block` takes a block, and the compiler's control-flow
-intrinsics run it; `@controlflow$repeat(n, body)` runs it `n` times:
+intrinsics run the block: `@controlflow$repeat(n, body)` runs `body` `n`
+times:
 
 ```zane
 package hello;
@@ -248,8 +252,8 @@ hip hip
 hooray
 ```
 
-A function that takes a block is expanded where it is called, so a block
-costs nothing at run time.
+The compiler expands a function that takes a block at each call site, so a
+block costs nothing at run time.
 
 ## In the spec
 

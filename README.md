@@ -9,19 +9,22 @@ folder at <https://zane-lang.org/docs>. This `README.md` is not a site page.
 
 ## Layout
 
-- Every page lives in `docs/`. A folder's `README.md` is its index: its first
-  `#` heading is the folder's title, and its links, in order, are the sidebar
-  and the pages that get published. A page that no index links is not
-  published.
-- A page's title is its first `#` heading, and the paragraph after it is its
-  description, so keep that to one plain sentence.
-- Links are relative `.md` links. A link into another Zane repository uses its
-  `https://github.com/zane-lang/<repo>/blob/main/<path>` URL, which the site
-  rewrites to its own page.
+- Every page lives in `docs/`. Each folder's `README.md` is that folder's
+  index page. The index page's first `#` heading is the folder's title, and
+  the index page's links, in order, become the sidebar and decide which pages
+  are published. A page that no index page links to is not published.
+- The site takes a page's title from its first `#` heading and the page's
+  description from the paragraph after that heading, so write that paragraph
+  as one plain sentence.
+- Links between pages are relative `.md` links. A link to a file in another
+  Zane repository uses that file's
+  `https://github.com/zane-lang/<repo>/blob/main/<path>` URL, and the site
+  rewrites the URL to the site's own page for that file.
 - A ```` ```zane ```` block is a whole program, starting `package <name>;`,
-  that must build and run; an ```` ```output ```` block right after it is its
-  exact output. ```` ```zane fragment ```` is shown only, and
-  ```` ```zane error ```` must fail `zane check`, with an optional
-  `// error: <text>` first line naming the message.
+  that must build and run. An ```` ```output ```` block right after it holds
+  the program's exact output. A ```` ```zane fragment ```` block is shown but
+  not run. A ```` ```zane error ```` block must fail `zane check`, and may
+  start with a `// error: <text>` line giving text that the compiler's error
+  message must contain.
 
-[`CONTRIBUTING.md`](CONTRIBUTING.md) says how the examples are checked.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) describes how the examples are checked.

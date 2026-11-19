@@ -4,27 +4,27 @@ This page covers how code is split into packages, how one package imports anothe
 
 ## A package is a directory
 
-Every `.zn` file starts by naming its package, and a package is the directory
-its files are in. All files of a package form one unit: their declarations
+Every `.zn` file starts by naming its package, and each package is one
+directory of files. All files of a package form one unit: their declarations
 can refer to each other in any order, with no imports between them.
 
 A project keeps its packages in three directories:
 
 ```text
 lib/geometry/        a library package, `geometry`, that others can import
-lib/geometry/shapes/ a subpackage of it, reached through `geometry`
+lib/geometry/shapes/ a subpackage of `geometry`, reached through `geometry`
 bin/viewer/          a program package: it declares `main` and builds a program
-test/geometry/       a test package for `geometry`; its files say `package test;`
+test/geometry/       a test package for `geometry`; its files start with `package test;`
 ```
 
-A program or test package is the root of its build: it alone declares `main`
-and reaches `@program$`. Library packages are compiled into whatever program
+A program or test package is the root package of its build: only the root
+package declares `main` and reaches `@program$`. Library packages are compiled into whatever program
 uses them.
 
 ## Imports
 
-An import is per file, and the form it takes decides how the file writes the
-imported names:
+Each import applies to one file, and the import's form determines how that file
+writes the imported names:
 
 | Import | Names are written |
 |---|---|
@@ -36,8 +36,8 @@ imported names:
 | `import math$;` | every public name, unqualified |
 
 `$` separates a package from its member everywhere, including the compiler's
-own names such as `@primitives$String`. Keeping the prefix shows where a name
-comes from:
+own names such as `@primitives$String`. Keeping the package prefix shows which
+package a name comes from:
 
 ```zane
 package hello;
@@ -58,7 +58,7 @@ Unit main() {
 7
 ```
 
-and naming the members brings in just those:
+and listing members imports only those members:
 
 ```zane
 package hello;
@@ -81,15 +81,15 @@ Unit main() {
 
 Each imported name has one spelling in a file, so `import math;` and
 `import math$sqrt;` together are an error, and two imports that bring in the
-same bare name collide at the import. Imports add names, never meanings: an
+same bare name are an error at the import. An import only adds names: an
 operator such as `+` is always declared in the package of one of its operand
 types, so no import can change what an expression means.
 
 ## Privacy
 
 A declaration whose name starts with `_` is private to its package, and so is
-a field whose name does: code in the same package can use it, code elsewhere
-cannot. Everything else is public. A library package whose own name starts
+a field whose name starts with `_`: code in the same package can use the
+private name, and code in other packages cannot. Everything else is public. A library package whose own name starts
 with `_` can be imported only inside its project.
 
 ```zane fragment
@@ -114,7 +114,7 @@ Another package can build a `Circle` and call `area` on it, but not read
 
 A package from another project is imported the same way, once the project
 depends on it: `zane add <url>` records the dependency and prints the
-`import` lines for its packages. [Projects](../guides/projects.md) covers the
+`import` lines for the dependency's packages. [Projects](../guides/projects.md) covers the
 manifest and versions.
 
 ## In the spec

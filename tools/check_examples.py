@@ -5,7 +5,7 @@ Fence convention (canonical description: CONTRIBUTING.md):
 
   ```zane            whole program: must build and run, exit 0
   ```output         exact stdout of the zane fence just before it
-  ```zane fragment   shown only, skipped
+  ```zane fragment   shown on the page, not run; counted as skipped
   ```zane error      must fail `zane check`; `// error: <text>` on the first
                      line must appear in the diagnostics
   anything else      ignored
@@ -35,8 +35,9 @@ COMPILER_URL = (
     "zane-compiler-{v}-{os}-{arch}.tar.gz"
 )
 TIMEOUT = 300
-# run()'s exit code for a command it stopped: no process exits with it
-# (a negative code is a signal, and signals end at 64).
+# The exit code run() returns for a command it had to stop. No real process
+# exits with this code: a negative code is a signal number, and signal numbers
+# end at 64.
 TIMED_OUT = -1000
 
 
@@ -102,7 +103,7 @@ class Example:
 
 
 def classify(fence):
-    """Kind of a fence, or None when it is not a zane example."""
+    """The example kind of a fence, or None when the fence is not a zane example."""
     if fence.lang != "zane":
         return None
     attrs = fence.words[1:]
@@ -187,7 +188,7 @@ def _plat():
 
 
 def _download(url, dest):
-    """Download to a temporary file beside `dest`, moved into place only once complete."""
+    """Download to a temporary file next to `dest`, and move it to `dest` only once the download is complete."""
     dest = Path(dest)
     fd, part = tempfile.mkstemp(prefix=dest.name + ".", suffix=".part", dir=dest.parent)
     try:
@@ -232,7 +233,7 @@ def _check_member(m):
 
 
 def extract_compiler(archive, tc):
-    """Unpack a compiler release into `tc`, which appears only if every member extracts."""
+    """Unpack a compiler release into `tc`; `tc` is created only if every member extracts."""
     tc.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=tc.name + ".", suffix=".part", dir=tc.parent))
     try:
@@ -297,8 +298,8 @@ def run(cmd, cwd, env=None, timeout=None):
 
 
 def executable(cmd):
-    """A path-valued command made absolute, since commands run in other directories;
-    a bare name stays as it is, for PATH lookup."""
+    """Make a command given as a path absolute, because commands run in other
+    directories; leave a bare command name unchanged, so that PATH lookup finds it."""
     if os.sep in cmd or (os.altsep and os.altsep in cmd):
         return str(Path(cmd).resolve())
     return cmd
@@ -307,8 +308,8 @@ def executable(cmd):
 def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
     """Create the template project once; returns its directory.
 
-    `zane init` pins the newest installed compiler, so a pinned `compiler`
-    moves the template to it with `zane toolchain update`.
+    `zane init` pins the newest installed compiler, so when `compiler` is given,
+    `zane toolchain update` moves the template to that compiler.
     """
     rc, out, err = run([zane, "init", "tmpl", "--yes"], root, env)
     if rc:
@@ -350,7 +351,7 @@ def trim(s, n=25):
 
 
 def same_output(actual, expected):
-    """Exact stdout, but for one trailing newline (CONTRIBUTING.md)."""
+    """The program's exact stdout, ignoring one trailing newline (CONTRIBUTING.md)."""
     def drop_one(s):
         return s[:-1] if s.endswith("\n") else s
     return drop_one(actual) == drop_one(expected)

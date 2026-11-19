@@ -33,17 +33,17 @@ green
 blue
 ```
 
-A member is written through its type: `Color.green`. `match` picks the arm
-for the value it is given. It has no default arm, so every member must be
-covered, and adding a member later makes every `match` that misses it an
-error. One arm may cover several members by listing them in `[ ]`.
+A member is written after its type's name: `Color.green`. `match` runs the
+arm that names the value being matched. A `match` has no default arm, so its
+arms must cover every member, and adding a member later makes every `match`
+that doesn't cover the new member an error. One arm may cover several members by listing them in `[ ]`.
 
 ## Variants
 
 A `variant` is a sum type: each value is one of several **cases**, and each
-case carries a payload of its own type. Its body looks like a struct's, with
-cases where a struct has fields. A value is built by naming a case and passing
-its payload:
+case carries a payload of its own type. A variant's body looks like a
+struct's body, with cases in place of fields. A variant value is built by
+naming a case and passing the case's payload:
 
 ```zane
 package hello;
@@ -105,14 +105,15 @@ Float area(this Shape) => match (this) {
 }
 ```
 
-The compiler writes the scrutinee in parentheses, `match (shape)`, where the
-spec writes it bare (compiler
+The compiler requires the scrutinee in parentheses, `match (shape)`, where
+the spec writes the scrutinee without them (compiler
 [divergence 4](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#4-a-match-parenthesizes-its-scrutinee-list)).
 
 ## Matching several values
 
-A `match` may take several scrutinees, and each arm then names a case of
-each. This replaces nested matches when the answer depends on a combination:
+A `match` may take several scrutinees, and each arm then names one case of
+each scrutinee. Several scrutinees replace nested matches when the result
+depends on a combination of values:
 
 ```zane
 package hello;
@@ -144,8 +145,9 @@ go
 
 ## Reading one case
 
-`shape.circle` reads the `circle` payload directly. That fails when another
-case is live, so the read takes a handler, as any call that can fail does:
+`shape.circle` reads the `circle` payload directly. That read fails when the
+value holds a different case, so the read needs a handler, as every call that
+can fail does:
 `??` gives a value to use instead ([Errors](errors.md)).
 
 ```zane
@@ -207,8 +209,9 @@ Unit main() {
 
 ## Enum maps
 
-An **enum map** gives every member of an enum a value, read like a field.
-Adding a member makes the map incomplete until it gets its value too:
+An **enum map** gives every member of an enum a value, which is read like a
+field. After a member is added to the enum, the map is incomplete until the
+map gives the new member a value too:
 
 ```zane
 package hello;

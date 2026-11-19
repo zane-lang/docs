@@ -12,13 +12,13 @@ it on every push and pull request.
 |---|---|
 | ```` ```zane ```` | A whole program. It must build and run (`zane run`) and exit 0. Its first line is `package <name>;`; the checker renames it to the package of its template project. |
 | ```` ```output ```` | Directly after a `zane` fence (only blank lines between): the program's exact stdout. A single trailing newline is ignored. |
-| ```` ```zane fragment ```` | Shown only; skipped and counted. |
+| ```` ```zane fragment ```` | Shown on the page but not run; the checker counts it as skipped. |
 | ```` ```zane error ```` | Must fail `zane check`. If its first line is `// error: <text>`, the compiler's diagnostics must contain `<text>`. |
 | any other fence (`sh`, `text`, `coda`, …) | Ignored. |
 
 Fences follow CommonMark: three or more backticks or tildes, closed by the same
 character at least as long. A `zane` block nested inside a longer
-` ````markdown ` fence is shown text, not an example.
+` ````markdown ` fence is part of the shown text, and the checker does not check it.
 
 ### Running it
 
@@ -36,5 +36,6 @@ the versions pinned in `toolchain.coda` to `~/.cache/zane-check-examples` and
 Failures print as `path:line: <what failed>` with trimmed compiler or program
 output, then `N passed, M failed, K skipped`; the exit code is 1 on any failure.
 
-`toolchain.coda` pins the zane, compiler and std versions the docs are checked
-against. Bump it together with the docs that need the newer release.
+`toolchain.coda` pins the versions of `zane`, the compiler and `std` that the
+checker uses. Update it in the same change as the docs that need the newer
+release.

@@ -5,9 +5,9 @@ This page covers the shape of a Zane program: symbols, numbers, booleans, string
 Most examples on these pages are whole programs: they declare `main`. To run
 one, put it in `bin/hello/main.zn` of a project that depends on `std` ([Your
 first project](../first-project.md)) and run `zane run`; the first line may
-name any package, as long as it matches the directory. A few show only part of
-a package, such as a library's file or one function, and run only with the rest
-of the program around them.
+name any package, as long as it matches the directory. A few examples show
+only part of a package, such as one file of a library or a single function;
+they run only as part of a larger program.
 
 ## A program
 
@@ -29,21 +29,22 @@ Hello!
 ```
 
 - `package hello;` names the package the file belongs to. A program's package
-  is the directory it lives in, under `bin/`.
+  name is the name of the program's directory under `bin/`.
 - `import core$;` brings in the `core` package of the standard library, which
   declares `Unit`, `Int`, `String`, `Console` and almost everything else on
-  these pages. The trailing `$` lets you write its names without a `core$`
-  prefix ([Packages](packages.md)).
-- A function is written with what it returns first: `Unit main()` returns
-  `Unit`, the type with one value, which says "nothing interesting". Every
-  function returns with `return`.
+  these pages. The trailing `$` lets you write the names that `core` declares
+  without a `core$` prefix ([Packages](packages.md)).
+- A function declaration starts with its return type: `Unit main()` returns
+  `Unit`, the type with only one value, which a function returns when it has
+  no meaningful result. Every function returns with `return`.
 - `//` starts a comment, and `///` a documentation comment on the declaration
   below it.
 
 ## Symbols
 
-A **symbol** is a named value: a local variable, a parameter or a field. It is
-written name first, then its type, and it always starts with a value:
+A **symbol** is a named value: a local variable, a parameter or a field. A
+symbol declaration puts the name first and the type second, and every symbol
+gets a value when it is declared:
 
 ```zane
 package hello;
@@ -68,9 +69,10 @@ Unit main() {
 49
 ```
 
-The case of a name says what it is: types start with an upper-case letter
-(`Int`, `Console`), and values and functions with a lower-case one (`width`,
-`main`). A name starting with `_` is private to its package.
+An identifier's case shows whether it names a type or a value: type names
+start with an upper-case letter (`Int`, `Console`), and the names of values
+and functions start with a lower-case letter (`width`, `main`). An identifier
+starting with `_` is private to its package.
 
 A declaration states its type, and the value must already be of that type.
 That is why `width Int = Int(6);` calls `Int` on the literal `6`: a literal is
@@ -121,19 +123,20 @@ Unit main() {
 4
 ```
 
-`~` is the one prefix operator: it negates a number and inverts a `Bool`.
+`~` is Zane's only prefix operator: it negates a number and inverts a `Bool`.
 `a - b` means `a + ~b`, and `>`, `<=`, `>=` and `~=` are likewise derived
-from `<` and `==`, so a type that defines `+`, `~`, `<` and `==` gets them all.
-There are no implicit conversions between number types: `Float(a)` converts
-an `Int`, and `Int.truncate(x)` a `Float`.
+from `<` and `==`, so a type that defines `+`, `~`, `<` and `==` also gets
+`-`, `>`, `<=`, `>=` and `~=`. There are no implicit conversions between
+number types: `Float(a)` converts an `Int` to a `Float`, and `Int.truncate(x)`
+converts a `Float` to an `Int`.
 
-Two literals never meet an operator on their own: `2 * 3` alone has no type
-to work in, so one side is written as `Int(2)`.
+An operator can't take two literals as its operands: `2 * 3` has no type to
+compute in, so write one operand as `Int(2)`.
 
 ## Strings
 
 A `String` is UTF-8 text. `+` joins strings, `String(n)` turns a number into
-one, and `\%name` inside a literal inserts the value of a `String` symbol:
+a string, and `\%name` inside a literal inserts the value of a `String` symbol:
 
 ```zane
 package hello;
@@ -158,9 +161,9 @@ tab:	quote: "Ada"
 3
 ```
 
-`\n`, `\t`, `\r`, `\0` and `\\` are read as escapes in a literal's own text,
-and `\"` writes a double quote. Interpolation names one symbol, so a field or a
-call result is bound to a symbol first.
+`\n`, `\t`, `\r`, `\0` and `\\` are escapes inside a string literal, and
+`\"` writes a double quote. An interpolation can insert only a symbol, so to
+insert a field or the result of a call, bind it to a symbol first.
 
 ## In the spec
 

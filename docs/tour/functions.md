@@ -34,17 +34,18 @@ Unit main() {
 ```
 
 Declarations at package scope can come in any order, so `sumOfSquares` may
-call a function declared below it. An argument is a *coercion site*: there a
-literal such as `9` is converted to the parameter's type. A `return` is not,
-so a function returning `String` writes `return String("text");`.
+call a function declared below it. An argument is a *coercion site*: a
+literal such as `9`, passed as an argument, is converted to the parameter's
+type. A `return` is not a coercion site, so a function returning `String`
+writes `return String("text");`.
 
-Parameters are read-only: a function cannot assign to them or change what they
-hold.
+Parameters are read-only: a function cannot assign to a parameter or change
+the value a parameter holds.
 
 ## Methods and their subject
 
-A method is a function whose first parameter is `this`. The value it is
-called on is its **subject**. Methods are declared outside the type, at
+A method is a function whose first parameter is `this`. The value written
+before the `:` or `!` of a method call is the method's **subject**. Methods are declared outside the type, at
 package scope, like any other function:
 
 ```zane
@@ -57,10 +58,10 @@ type Counter = struct {
 }
 Counter() => init{ count = Int(0); }
 
-/// Reads its subject.
+/// Reads the counter.
 Int value(this Counter) => this.count;
 
-/// Changes its subject: `mut`.
+/// Changes the counter, so it is declared `mut`.
 Unit add(this Counter, amount Int) mut {
 	this.count = this.count + amount;
 	return Unit();
@@ -81,10 +82,10 @@ Unit main() {
 ```
 
 A method is **read-only** unless it is declared `mut`. A `mut` method may
-write its subject, and nothing else of its caller's. The call says which kind
-it is: `c:value()` calls a read-only method and `c!add(…)` a `mut` one, so
-you can see at each call whether the subject may change. Using the wrong
-marker is an error:
+change its subject, and nothing else that belongs to its caller. The call
+marker shows which kind of method a call calls: `c:value()` calls a read-only
+method with `:`, and `c!add(…)` calls a `mut` method with `!`, so every call
+shows whether the subject may change. Using the wrong marker is an error:
 
 ```zane error
 // error: is a `mut` method, so it is called with `!`
@@ -110,7 +111,7 @@ Unit main() {
 ```
 
 Because methods live outside the type, any package can add methods to any
-type, `Int` included. A method never converts its subject, so a literal
+type, `Int` included. A subject is never converted, so a literal used as a
 subject is written as `Int(4)`:
 
 ```zane
@@ -146,7 +147,7 @@ A `mut` method can assign `this` itself: `n!double()` changes `n`.
 ## Overloading
 
 Several functions may share a name when their parameter types differ. The
-call picks the one whose parameters fit its arguments:
+compiler picks the overload whose parameter types fit the call's arguments:
 
 ```zane
 package hello;
@@ -180,7 +181,7 @@ Operators are overloaded the same way; see [Types](types.md#operators).
 A function itself is not a value, but a **lambda** is: a function declaration
 without its name, which writes its parameter and return types out in full. A
 function type is written as the return type followed by the parameter types in
-`[ ]`: `Int[Int]` takes an `Int` and returns one.
+`[ ]`: `Int[Int]` takes an `Int` and returns an `Int`.
 
 ```zane
 package hello;
@@ -206,9 +207,10 @@ Unit main() {
 21
 ```
 
-A lambda does not capture the symbols around it: everything it uses is a
-parameter. A block passed to a call, as `if` and loops take one, is not a
-lambda and may use the symbols around it; see [Control flow](control-flow.md).
+A lambda does not capture the symbols around it: everything a lambda uses
+must be one of its parameters. A block passed to a call, such as the block
+that `if` or a loop takes, is not a lambda, and a block may use the symbols
+around it; see [Control flow](control-flow.md).
 
 ## In the spec
 

@@ -1,6 +1,6 @@
 # Install Zane
 
-This page installs `zane`, the command that builds and runs Zane programs, and a compiler for it to use.
+This page shows how to install `zane`, the command that builds and runs Zane programs, and a compiler for `zane` to use.
 
 ## Install `zane`
 
@@ -20,9 +20,10 @@ On **Windows x86_64**, in PowerShell:
 & ([scriptblock]::Create((Invoke-RestMethod https://github.com/zane-lang/zane/releases/latest/download/install.ps1)))
 ```
 
-It installs into `%LOCALAPPDATA%\Programs\Zane\bin` and adds that folder to
-your user `Path`. `-Version v0.18` picks a version and `-InstallDir <folder>`
-another directory, written after the command above.
+The PowerShell script installs into `%LOCALAPPDATA%\Programs\Zane\bin` and
+adds that folder to your user `Path`. To install a particular version or into
+another folder, add `-Version v0.18` or `-InstallDir <folder>` after the
+command above.
 
 Neither installer needs administrator access. You can also download the
 binaries from the [releases page](https://github.com/zane-lang/zane/releases)
@@ -30,9 +31,9 @@ and read the scripts before running them.
 
 ## Put it on your `PATH`
 
-On Linux and macOS, `~/.local/bin` is often on the `PATH` already. If
-`zane --version` says the command is not found, add this line to `~/.bashrc`
-or `~/.zshrc` and open a new terminal:
+On Linux and macOS, `~/.local/bin` is often on the `PATH` already. If the
+shell reports that `zane` is not found when you run `zane --version`, add this
+line to `~/.bashrc` or `~/.zshrc` and open a new terminal:
 
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
@@ -50,13 +51,14 @@ zane --version
 
 Compilers are installed side by side under `~/.zane/toolchains/`, one
 directory per version, so projects pinned to different versions build next to
-each other. Each compiler release brings everything it needs to build programs
-for Linux, macOS and Windows, so you install no C compiler or LLVM yourself.
+each other. Each compiler release includes everything needed to build programs
+for Linux, macOS and Windows, so you don't need to install a C compiler or LLVM
+yourself.
 To keep `zane`'s files somewhere other than `~/.zane`, set `ZANE_HOME`.
 
 A new project is pinned to the newest compiler installed. Installing a newer
-one later changes no existing project until you run `zane toolchain update` in
-it; see [Projects](guides/projects.md#the-compiler-a-project-uses).
+compiler later doesn't change any existing project until you run
+`zane toolchain update` in that project; see [Projects](guides/projects.md#the-compiler-a-project-uses).
 
 ## Keep `zane` up to date
 
@@ -64,9 +66,9 @@ it; see [Projects](guides/projects.md#the-compiler-a-project-uses).
 zane self update
 ```
 
-This replaces the running `zane` with the latest release, after checking its
-SHA-256. A `zane` installed through Nix or Homebrew is updated by that package
-manager instead.
+`zane self update` replaces the running `zane` with the latest release, after
+checking the release's SHA-256. A `zane` installed through Nix or Homebrew is
+updated by that package manager instead.
 
 ## Editor support
 
@@ -78,9 +80,10 @@ newer) syntax highlighting for `.zn` files through Tree-sitter. With
 { "zane-lang/zane-nvim", lazy = false }
 ```
 
-It needs nvim-treesitter (`main` branch), the Tree-sitter CLI, a C compiler,
-`curl` and `tar`; the parser installs itself the first time you open a Zane
-file. Its README has the other install routes and options.
+`zane-nvim` needs nvim-treesitter (`main` branch), the Tree-sitter CLI, a C
+compiler, `curl` and `tar`; the parser installs itself the first time you open
+a Zane file. The `zane-nvim` README lists the other ways to install it and its
+options.
 
 For C code in a package, `zane check` writes `compile_commands.json`, which
 clangd reads.
