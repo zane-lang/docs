@@ -168,13 +168,13 @@ Unit main() {
 |---|---|---|
 | `Array<T, n>` | fixed, `n` | values, copied with the array |
 | `List<T>` | grows | values, copied with the list |
-| `ArrayRef<T, n>` | fixed, `n` | owners that stay in place, so they can be referred to |
+| `ArrayRef<T, n>` | fixed, `n` | elements that stay in place; the container is a reference type |
 | `ListRef<T>` | grows | owners, moved in and out |
 
 `List` and `Array` are value types themselves: assigning a list copies it
-with its elements. `ArrayRef` and `ListRef` hold reference types, which
+with its elements. `ListRef` holds owners of reference types, which
 [Memory](memory.md) explains. The [`core`
-library](https://github.com/zane-lang/std/blob/main/docs/README.md) pages list
+library](https://github.com/zane-lang/std/blob/main/docs/core/containers.md) pages list
 their methods.
 
 ## In the spec

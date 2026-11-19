@@ -8,8 +8,8 @@ Zane is a systems programming language that compiles to native code. Memory
 is managed deterministically, with no garbage collector and no lifetime
 annotations: every object has one owner, references can never dangle, and
 everything a scope created is destroyed when the scope ends. A call shows at
-its call site whether it may change what it is called on, and a program can
-only print, read files or reach the network through objects it is handed.
+its call site whether it may change what it is called on, and code reaches
+the console and other outside state only through objects it is handed.
 
 Much of what other languages build in is ordinary Zane code here. `Int`,
 `String`, `List`, `if`, `else` and loops are declared in the `core` package
