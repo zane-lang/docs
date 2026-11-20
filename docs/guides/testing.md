@@ -61,7 +61,7 @@ the result of each check and counts the checks that fail. Its `finish` method
 aborts when any check failed, and `main` passes that abort on, so a failed
 check fails the test package. For example, as `test/shapes/main.zn`:
 
-```zane fragment
+```zane
 package test;
 
 import core$;
@@ -108,8 +108,9 @@ Unit?@primitives$String main() {
 }
 ```
 
-```text
-$ zane test shapes
+`zane test shapes` runs this package, and the package prints:
+
+```output
 ok   one element
 ok   first is 3
 ```
