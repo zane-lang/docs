@@ -45,5 +45,5 @@ of compiler intrinsics.
   lists where it [differs from the
   spec](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md).
 
-These pages target `zane` v0.18, compiler v0.40 and `std` v0.15. Zane's major
+These pages target `zane` v0.18, compiler v0.41 and `std` v0.15. Zane's major
 version is still zero, so the language and its tools change between releases.

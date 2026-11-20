@@ -132,21 +132,43 @@ package test;
 import core$;
 import shapes$;
 
-Unit check(this Console, name String, ok Bool) mut {
+/// Prints each check's result, and counts the checks that fail.
+type Checks = #struct {
+	_console Console;
+	_failed Int;
+}
+Checks() => init{
+	_console = Console(@program$console);
+	_failed = Int(0);
+}
+
+Unit check(this Checks, name String, ok Bool) mut {
 	passed Bool = if(ok) {
-		this!print("ok   " + name);
+		this._console!print("ok   " + name);
 	}
 	passed:else() {
-		this!print("FAIL " + name);
+		this._failed = this._failed + 1;
+		this._console!print("FAIL " + name);
 	}
 	return Unit();
 }
 
-Unit main() {
-	console Console(@program$console);
+/// Aborts with a message when any check failed.
+Unit?@primitives$String finish(this Checks) {
+	if(this._failed > 0) {
+		abort @primitives$String(String(this._failed) + " of the checks failed");
+	}
+	return Unit();
+}
+
+Unit?@primitives$String main() {
+	checks Checks();
 	r Rect(Int(3), Int(4));
-	console!check("area", r:area() == 12);
-	console!check("not square", ~r:isSquare());
+	checks!check("area", r:area() == 12);
+	checks!check("not square", ~r:isSquare());
+	checks:finish() ? report {
+		abort report;
+	}
 	return Unit();
 }
 ```
@@ -160,6 +182,10 @@ ok   area
 ok   not square
 1 test package passed.
 ```
+
+When a check fails, `finish` aborts, and `main` passes the abort on: the test
+package writes `1 of the checks failed` to stderr and exits with 1, and
+`zane test` reports the package as failed.
 
 A project can hold library packages, programs and tests together: each
 directory under `bin/` is a program. [Testing](guides/testing.md) covers test

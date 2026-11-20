@@ -46,38 +46,64 @@ ok   not square
 1 of 2 test packages failed: edge
 ```
 
-A test package fails when its program exits with a status other than 0; a
-program that stops on an index out of range is one example. If any test
+A test package fails when its program exits with a status other than 0. A
+program that stops on an index out of range is one example. A `main` that
+aborts is another: `main` may declare `@primitives$String` as its abort type,
+and when `main` aborts, the program writes the abort message to stderr and
+exits with 1. If any test
 package fails, `zane test` exits with 1. When `zane test` runs a single
 package, it exits with that package's status.
 
 ## Writing checks
 
-Each test package decides how to report its results. A small helper that
-prints the result of each check is enough to start with; for example, as
-`test/shapes/main.zn`:
+Each test package reports its results in its own way. The helper below prints
+the result of each check and counts the checks that fail. Its `finish` method
+aborts when any check failed, and `main` passes that abort on, so a failed
+check fails the test package. For example, as `test/shapes/main.zn`:
 
 ```zane fragment
 package test;
 
 import core$;
 
-Unit check(this Console, name String, ok Bool) mut {
+/// Prints each check's result, and counts the checks that fail.
+type Checks = #struct {
+	_console Console;
+	_failed Int;
+}
+Checks() => init{
+	_console = Console(@program$console);
+	_failed = Int(0);
+}
+
+Unit check(this Checks, name String, ok Bool) mut {
 	passed Bool = if(ok) {
-		this!print("ok   " + name);
+		this._console!print("ok   " + name);
 	}
 	passed:else() {
-		this!print("FAIL " + name);
+		this._failed = this._failed + 1;
+		this._console!print("FAIL " + name);
 	}
 	return Unit();
 }
 
-Unit main() {
-	console Console(@program$console);
+/// Aborts with a message when any check failed.
+Unit?@primitives$String finish(this Checks) {
+	if(this._failed > 0) {
+		abort @primitives$String(String(this._failed) + " of the checks failed");
+	}
+	return Unit();
+}
+
+Unit?@primitives$String main() {
+	checks Checks();
 	values List<Int> = List(Int);
 	values!push(Int(3));
-	console!check("one element", values:size() == 1);
-	console!check("first is 3", values[Int(1)] == 3);
+	checks!check("one element", values:size() == 1);
+	checks!check("first is 3", values[Int(1)] == 3);
+	checks:finish() ? report {
+		abort report;
+	}
 	return Unit();
 }
 ```
@@ -86,6 +112,15 @@ Unit main() {
 $ zane test shapes
 ok   one element
 ok   first is 3
+```
+
+When a check fails, the package prints the abort message and fails:
+
+```text
+$ zane test shapes
+FAIL one element
+ok   first is 3
+1 of the checks failed
 ```
 
 A testing library added with `zane add <url> --test` can provide richer

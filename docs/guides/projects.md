@@ -25,7 +25,7 @@ After `zane add https://github.com/zane-lang/std --from-source`, a
 `zane.coda` reads:
 
 ```text
-zane-version v0.40
+zane-version v0.41
 version-pattern v*.+.++
 
 deps [
@@ -51,7 +51,7 @@ and how much each spawned call's nested scopes may take.
 ## The lock file
 
 ```text
-zane-commit c3208354223e1f0e1096a8698514bbb624f08efd
+zane-commit 617c32da19d95789ae942213608fbba825127333
 
 resolutions [
     key url commit
@@ -117,7 +117,7 @@ any project. To move a project to another compiler:
 
 ```sh
 zane toolchain update          # the newest release of the project's major version
-zane toolchain update v0.40    # or the release you name
+zane toolchain update v0.41    # or the release you name
 ```
 
 `zane toolchain update` checks the dependency graph against the new compiler
