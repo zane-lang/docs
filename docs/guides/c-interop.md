@@ -78,8 +78,9 @@ where a signed overflow is undefined in C. `@primitives$I64` carries the same
 The usual pattern is a private foreign verb, named with a leading `_`, and a
 public function in `core`'s types that calls it. The call `_checksum(text)`
 needs no conversion written out, because `core` declares an implicit
-conversion from `String` to `@primitives$String`. The other direction is an
-explicit constructor call, so the result becomes an `Int` through `Int(...)`.
+conversion from `String` to `@primitives$String`, and an argument is a
+coercion site. A `return` is not one, so the result is converted with
+`Int(...)`, although `core` declares that conversion implicit too.
 
 The compiler checks every foreign verb against the declaration in the
 package's interface headers. A Zane signature that does not match the C
