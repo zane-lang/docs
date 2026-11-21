@@ -132,7 +132,9 @@ and takes no `;`.
 A constructor marked `implicit` and taking one argument is a conversion: when
 an argument has the constructor's parameter type and the function expects the
 constructor's type, the compiler calls the constructor for you. That is how
-`core` turns the literal `"text"` into a `String` when you pass it, and
+`core` turns the literal `"text"`, whose type is the concept
+`@concepts$String`, into a `String` when you pass it
+([Intrinsics and concepts](intrinsics.md#concepts-what-a-literal-is)), and
 implicit constructors work the same way for your own types:
 
 ```zane

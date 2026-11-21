@@ -29,7 +29,8 @@ question below; outside a terminal, or with `--yes`, it uses the defaults.
 ### `zane check`
 
 Type-checks the project's packages without building them. When a package
-holds C code, it also writes `compile_commands.json` for clangd.
+holds C code ([Calling C](../guides/c-interop.md)), it also writes
+`compile_commands.json` for clangd.
 
 ### `zane build [program]`
 

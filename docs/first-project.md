@@ -25,7 +25,8 @@ hello/
 
 `zane run` builds the program and runs it, printing `hello world`. The
 generated `main.zn` uses only the compiler's built-in names, such as
-`@primitives$String`, because a new project has no dependencies yet.
+`@primitives$String`, because a new project has no dependencies yet
+([Intrinsics and concepts](tour/intrinsics.md) explains the `@` names).
 
 ## Add the standard library
 

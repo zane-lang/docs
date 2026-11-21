@@ -80,6 +80,74 @@ class Classify(unittest.TestCase):
         self.assertEqual(ex[0].line, 3)
 
 
+class Companions(unittest.TestCase):
+    def test_files_go_to_the_next_example_only(self):
+        text = ("```c file=a.h\nh\n```\ntext\n```c file=sub/a.c\nc\n```\n"
+                "```zane\nmain\n```\n```output\nhi\n```\n```zane\nother\n```\n")
+        ex = ce.extract("t.md", text)
+        self.assertEqual([e.kind for e in ex], [ce.PROGRAM, ce.PROGRAM])
+        self.assertEqual(ex[0].files, {"a.h": "h", "sub/a.c": "c"})
+        self.assertEqual(ex[0].expected, "hi")
+        self.assertEqual(ex[1].files, {})
+
+    def test_output_companion_is_not_expected_stdout(self):
+        ex = ce.extract("t.md", "```zane\na\n```\n```output file=data.txt\nd\n```\n"
+                                "```zane\nb\n```\n")
+        self.assertIsNone(ex[0].expected)
+        self.assertEqual(ex[1].files, {"data.txt": "d"})
+
+    def test_companion_write_error_is_an_example_failure(self):
+        # `assets` written as a file first leaves no room for the folder `assets/`.
+        ex = ce.Example("t.md", 1, ce.PROGRAM, "package demo;",
+                        files={"assets": "x", "assets/value.txt": "y"})
+        with tempfile.TemporaryDirectory() as d:
+            template = Path(d) / "tmpl"
+            (template / "bin" / "tmpl").mkdir(parents=True)
+            (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
+            msg = ce.check_example(ex, "zane", template, {}, False, d)
+        self.assertIn("cannot write companion file assets/value.txt", msg)
+
+    def test_error_example_takes_files(self):
+        ex = ce.extract("t.md", "```c file=a.h\nh\n```\n```zane error\nx\n```\n")
+        self.assertEqual(ex[0].files, {"a.h": "h"})
+
+    def test_zane_fence_with_file_is_a_companion(self):
+        ex = ce.extract("t.md", "```zane file=other.zn\nx\n```\n```zane\nmain\n```\n")
+        self.assertEqual(len(ex), 1)
+        self.assertEqual(ex[0].files, {"other.zn": "x"})
+
+    def test_fragment_takes_no_files(self):
+        ex = ce.extract("t.md", "```c file=a.h\nh\n```\n```zane fragment\nf\n```\n"
+                                "```zane\nmain\n```\n")
+        self.assertEqual(ex[0].files, {})
+        self.assertEqual(ex[1].files, {"a.h": "h"})
+
+    def test_refused(self):
+        for text, why in [
+            ("```c file=a.h\nh\n```\n", "has no `zane`"),
+            ("```c file=a.h\nh\n```\n```zane fragment\nf\n```\n", "has no `zane`"),
+            ("```c file=../a.h\nh\n```\n```zane\nm\n```\n", "inside the package"),
+            ("```c file=/a.h\nh\n```\n```zane\nm\n```\n", "relative path"),
+            ("```c file=.\nh\n```\n```zane\nm\n```\n", "not a file"),
+            ("```c file=./\nh\n```\n```zane\nm\n```\n", "not a file"),
+            ("```c file=main.zn\nh\n```\n```zane\nm\n```\n", "the example itself"),
+            ("```c file=a.h\nh\n```\n```c file=./a.h\nh\n```\n```zane\nm\n```\n",
+             "given twice"),
+        ]:
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(ce.FenceError, why):
+                    ce.extract("t.md", text)
+
+    def test_cli_reports_a_refused_fence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "bad.md"
+            bad.write_text("x\n```c file=a.h\nh\n```\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(Path(ce.__file__)), "--zane", "zane",
+                                str(bad)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1)
+            self.assertRegex(r.stdout, r"bad\.md:2: ")
+
+
 class Misc(unittest.TestCase):
     def test_summary(self):
         self.assertEqual(ce.summary(3, 1, 2), "3 passed, 1 failed, 2 skipped")
@@ -153,6 +221,21 @@ class OutputAndPins(unittest.TestCase):
             calls = log.read_text(encoding="utf-8").splitlines()
             self.assertEqual(calls[0], "init tmpl --yes")
             self.assertEqual(calls[1], "toolchain update v0.40")
+
+    def test_template_already_on_the_pinned_compiler_is_not_updated(self):
+        with tempfile.TemporaryDirectory() as d:
+            log = Path(d) / "log"
+            fake = Path(d) / "zane"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "echo \"$*\" >> %s\n"
+                "if [ \"$1\" = init ]; then mkdir -p \"$2/bin/$2\";"
+                " echo 'zane-version v0.40' > \"$2/zane.coda\"; fi\n" % log,
+                encoding="utf-8")
+            fake.chmod(0o755)
+            ce.make_template(str(fake), d, compiler="v0.40")
+            calls = log.read_text(encoding="utf-8").splitlines()
+            self.assertNotIn("toolchain update v0.40", calls)
 
 
 def fake_zane(d, body):
@@ -269,6 +352,7 @@ class Commands(unittest.TestCase):
             template = Path(d) / "tmpl"
             (template / "bin" / "tmpl").mkdir(parents=True)
             (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
+            (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
             ex = [e for e in ce.collect([str(FIX / "error_compiles.md")]) if e.kind == ce.ERROR][0]
             ex.error_text = None  # with no expected text, any non-zero exit used to pass
             with mock.patch.object(ce, "TIMEOUT", 1):
@@ -308,6 +392,10 @@ class Integration(unittest.TestCase):
     def test_error_fence_that_compiles(self):
         failures, _, _ = self.run_fixture("error_compiles.md")
         self.assertIn("expected `zane check` to fail", failures[0][1])
+
+    def test_companion_files(self):
+        failures, passed, _ = self.run_fixture("companion.md")
+        self.assertEqual((failures, passed), ([], 1))
 
     def test_fragment_skipped(self):
         failures, passed, skipped = self.run_fixture("fragment.md")

@@ -15,7 +15,8 @@ the console and other outside state only through objects it is given.
 Many features that other languages build into the compiler are ordinary Zane
 code. `Int`, `String`, `List`, `if`, `else` and loops are declared in the
 `core` package of the standard library, written in Zane on top of a small set
-of compiler intrinsics.
+of compiler intrinsics, the names that start with `@`
+([Intrinsics and concepts](tour/intrinsics.md)).
 
 ## Where to start
 
@@ -23,7 +24,7 @@ of compiler intrinsics.
 2. [Your first project](first-project.md): create, run and test a project.
 3. [The language tour](tour/README.md): the language one topic at a time,
    each with programs you can run.
-4. [Guides](guides/README.md): projects, dependencies and testing in more depth.
+4. [Guides](guides/README.md): projects, dependencies, testing and calling C in more depth.
 5. [Reference](reference/README.md): every `zane` command, flag and environment variable.
 
 ## The rest of the site

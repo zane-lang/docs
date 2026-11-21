@@ -34,6 +34,10 @@ Hello!
   declares `Unit`, `Int`, `String`, `Console` and almost everything else on
   these pages. The trailing `$` lets you write the names that `core` declares
   without a `core$` prefix ([Packages](packages.md)).
+- A name that starts with `@`, such as `@program$console`, is supplied by the
+  compiler rather than declared in a package. `@program$console` is the
+  program's console, which `Console(...)` wraps in `core`'s type
+  ([Intrinsics and concepts](intrinsics.md)).
 - A function declaration starts with its return type: `Unit main()` returns
   `Unit`, the type with only one value, which a function returns when it has
   no meaningful result. Every function returns with `return`.
@@ -77,9 +81,9 @@ starting with `_` is private to its package.
 A declaration states its type, and the value must already be of that type.
 That is why `width Int = Int(6);` calls `Int` on the literal `6`: a literal is
 not yet an `Int`, and a declaration never converts on its own. A literal
-*is* converted when it is passed to a function or used as the operand of an
-operator next to an `Int`, so `width * 2` and `print("text")` need no
-conversion written out.
+*is* converted when it is passed to a function, and `core` declares operators
+that take a literal next to an `Int`, so `width * 2` and `print("text")` need
+no conversion written out.
 
 ## Numbers and booleans
 

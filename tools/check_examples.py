@@ -8,6 +8,9 @@ Fence convention (canonical description: CONTRIBUTING.md):
   ```zane fragment   shown on the page, not run; counted as skipped
   ```zane error      must fail `zane check`; `// error: <text>` on the first
                      line must appear in the diagnostics
+  ```c file=PATH     any fence with `file=PATH` in its info string: a file
+                     written at PATH, relative to the package directory, for
+                     the next `zane` or `zane error` example of the page
   anything else      ignored
 
 Stdlib only.
@@ -100,11 +103,38 @@ class Example:
     code: str
     expected: str = None   # program: exact stdout, or None when unchecked
     error_text: str = None  # error: required diagnostic text
+    files: dict = field(default_factory=dict)  # companion files: path -> text
+
+
+class FenceError(Exception):
+    """A fence the checker cannot use, reported as `path:line: message`."""
+
+
+def companion_path(fence):
+    """The `file=PATH` of a fence, or None when the fence names no file."""
+    for w in fence.words[1:] if fence.words else []:
+        if w.startswith("file="):
+            return w[len("file="):]
+    return None
+
+
+def _check_companion(path):
+    """Why a companion file's path is refused, or None when it is usable."""
+    p = PurePosixPath(path)
+    if not path or p.is_absolute() or "\\" in path:
+        return "file=%s must be a relative path with / separators" % path
+    if any(part == ".." for part in p.parts):
+        return "file=%s must stay inside the package directory" % path
+    if str(p) == ".":
+        return "file=%s names the package directory, not a file" % path
+    if str(p) == "main.zn":
+        return "file=main.zn would replace the example itself"
+    return None
 
 
 def classify(fence):
     """The example kind of a fence, or None when the fence is not a zane example."""
-    if fence.lang != "zane":
+    if fence.lang != "zane" or companion_path(fence) is not None:
         return None
     attrs = fence.words[1:]
     if "fragment" in attrs:
@@ -119,20 +149,38 @@ def extract(path, text):
     fences = parse_fences(text)
     lines = text.splitlines()
     examples = []
+    pending = {}  # companion files waiting for the next program or error example
+    first_pending = None
     for idx, f in enumerate(fences):
+        name = companion_path(f)
+        if name is not None:
+            problem = _check_companion(name)
+            if not problem and str(PurePosixPath(name)) in pending:
+                problem = "file=%s is given twice for one example" % name
+            if problem:
+                raise FenceError("%s:%d: %s" % (path, f.line, problem))
+            pending[str(PurePosixPath(name))] = f.body
+            first_pending = first_pending or f.line
+            continue
         kind = classify(f)
         if kind is None:
             continue
         ex = Example(str(path), f.line, kind, f.body)
+        if kind != FRAGMENT:
+            ex.files, pending, first_pending = pending, {}, None
         if kind == ERROR:
             first = f.body.split("\n", 1)[0].strip()
             m = re.match(r"//\s*error:\s*(.*\S)", first)
             ex.error_text = m.group(1) if m else None
         if kind == PROGRAM and idx + 1 < len(fences):
             nxt = fences[idx + 1]
-            if nxt.lang == "output" and _only_blank(lines, f, nxt):
+            if (nxt.lang == "output" and companion_path(nxt) is None
+                    and _only_blank(lines, f, nxt)):
                 ex.expected = nxt.body
         examples.append(ex)
+    if pending:
+        raise FenceError("%s:%d: a file= fence has no `zane` or `zane error` "
+                         "example after it" % (path, first_pending))
     return examples
 
 
@@ -308,14 +356,18 @@ def executable(cmd):
 def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
     """Create the template project once; returns its directory.
 
-    `zane init` pins the newest installed compiler, so when `compiler` is given,
-    `zane toolchain update` moves the template to that compiler.
+    `zane init` pins the newest installed compiler, so when `compiler` is given
+    and `zane init` pinned another one, `zane toolchain update` moves the
+    template to `compiler`. The update asks the GitHub API for the release, so
+    it runs only when the pin differs.
     """
     rc, out, err = run([zane, "init", "tmpl", "--yes"], root, env)
     if rc:
         sys.exit("zane init failed:\n" + (out + err))
     proj = Path(root) / "tmpl"
-    if compiler:
+    manifest = proj / "zane.coda"
+    pinned = read_coda(manifest).get("zane-version") if manifest.exists() else None
+    if compiler and compiler != pinned:
         rc, out, err = run([zane, "toolchain", "update", compiler], proj, env)
         if rc:
             sys.exit("zane toolchain update %s failed:\n%s" % (compiler, out + err))
@@ -365,6 +417,13 @@ def check_example(ex, zane, template, env, keep, workdir):
     mf = main_file(proj)
     mf.write_text(rename_package(ex.code, mf.parent.name) + "\n", encoding="utf-8")
     try:
+        for name, text in ex.files.items():
+            dest = mf.parent / name
+            try:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(text + "\n", encoding="utf-8")
+            except OSError as e:
+                return "cannot write companion file %s: %s" % (name, e)
         if ex.kind == ERROR:
             rc, out, err = run([zane, "check"], proj, env)
             diag = out + err
@@ -417,7 +476,11 @@ def main(argv=None):
     ap.add_argument("--keep", action="store_true", help="keep temp projects")
     args = ap.parse_args(argv)
 
-    examples = collect(args.paths)
+    try:
+        examples = collect(args.paths)
+    except FenceError as e:
+        print(e)
+        return 1
     work = tempfile.mkdtemp(prefix="zane-check-")
     env, zane, std_tag, compiler = {}, executable(args.zane), None, None
     try:

@@ -25,6 +25,8 @@ folder at <https://zane-lang.org/docs>. This `README.md` is not a site page.
   the program's exact output. A ```` ```zane fragment ```` block is shown but
   not run. A ```` ```zane error ```` block must fail `zane check`, and may
   start with a `// error: <text>` line giving text that the compiler's error
-  message must contain.
+  message must contain. A fence with `file=<path>` in its info string, such
+  as ```` ```c file=binding.h ````, is a file of the next example's package,
+  such as a C source or header.
 
 [`CONTRIBUTING.md`](CONTRIBUTING.md) describes how the examples are checked.
