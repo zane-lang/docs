@@ -155,9 +155,11 @@ sum 16
 both workers finished
 ```
 
-`pool!start(element, sources, step)` adds a worker whose step runs again only
-when one of `sources`, a `List<EventSource>`, is ready or the funnel has
-changed the state. Between calls, that worker holds no thread. The
+`pool!start(element, step)`, as in the example, calls the step again as soon
+as the step returns `true`. `pool!start(element, sources, step)` adds a worker
+whose step runs again only when one of `sources`, a `List<EventSource>`, is
+ready or the funnel has changed the state. Between calls, that worker holds
+no thread. The
 [`std` worker pool page](https://github.com/zane-lang/std/blob/main/docs/core/workers.md)
 lists every verb.
 
