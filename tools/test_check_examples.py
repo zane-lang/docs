@@ -202,6 +202,21 @@ class OutputAndPins(unittest.TestCase):
             self.assertEqual(calls[0], "init tmpl --yes")
             self.assertEqual(calls[1], "toolchain update v0.40")
 
+    def test_template_already_on_the_pinned_compiler_is_not_updated(self):
+        with tempfile.TemporaryDirectory() as d:
+            log = Path(d) / "log"
+            fake = Path(d) / "zane"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "echo \"$*\" >> %s\n"
+                "if [ \"$1\" = init ]; then mkdir -p \"$2/bin/$2\";"
+                " echo 'zane-version v0.40' > \"$2/zane.coda\"; fi\n" % log,
+                encoding="utf-8")
+            fake.chmod(0o755)
+            ce.make_template(str(fake), d, compiler="v0.40")
+            calls = log.read_text(encoding="utf-8").splitlines()
+            self.assertNotIn("toolchain update v0.40", calls)
+
 
 def fake_zane(d, body):
     """A stand-in zane: a shell script that runs `body` with the arguments in $@."""

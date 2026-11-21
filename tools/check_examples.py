@@ -353,14 +353,18 @@ def executable(cmd):
 def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
     """Create the template project once; returns its directory.
 
-    `zane init` pins the newest installed compiler, so when `compiler` is given,
-    `zane toolchain update` moves the template to that compiler.
+    `zane init` pins the newest installed compiler, so when `compiler` is given
+    and `zane init` pinned another one, `zane toolchain update` moves the
+    template to `compiler`. The update asks the GitHub API for the release, so
+    it runs only when the pin differs.
     """
     rc, out, err = run([zane, "init", "tmpl", "--yes"], root, env)
     if rc:
         sys.exit("zane init failed:\n" + (out + err))
     proj = Path(root) / "tmpl"
-    if compiler:
+    manifest = proj / "zane.coda"
+    pinned = read_coda(manifest).get("zane-version") if manifest.exists() else None
+    if compiler and compiler != pinned:
         rc, out, err = run([zane, "toolchain", "update", compiler], proj, env)
         if rc:
             sys.exit("zane toolchain update %s failed:\n%s" % (compiler, out + err))
