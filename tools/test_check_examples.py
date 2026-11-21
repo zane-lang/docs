@@ -111,6 +111,8 @@ class Companions(unittest.TestCase):
             ("```c file=a.h\nh\n```\n```zane fragment\nf\n```\n", "has no `zane`"),
             ("```c file=../a.h\nh\n```\n```zane\nm\n```\n", "inside the package"),
             ("```c file=/a.h\nh\n```\n```zane\nm\n```\n", "relative path"),
+            ("```c file=.\nh\n```\n```zane\nm\n```\n", "not a file"),
+            ("```c file=./\nh\n```\n```zane\nm\n```\n", "not a file"),
             ("```c file=main.zn\nh\n```\n```zane\nm\n```\n", "the example itself"),
             ("```c file=a.h\nh\n```\n```c file=./a.h\nh\n```\n```zane\nm\n```\n",
              "given twice"),
@@ -120,12 +122,13 @@ class Companions(unittest.TestCase):
                     ce.extract("t.md", text)
 
     def test_cli_reports_a_refused_fence(self):
-        d = Path(tempfile.mkdtemp())
-        (d / "bad.md").write_text("x\n```c file=a.h\nh\n```\n")
-        r = subprocess.run([sys.executable, str(Path(ce.__file__)), "--zane", "zane",
-                            str(d / "bad.md")], capture_output=True, text=True)
-        self.assertEqual(r.returncode, 1)
-        self.assertRegex(r.stdout, r"bad\.md:2: ")
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "bad.md"
+            bad.write_text("x\n```c file=a.h\nh\n```\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(Path(ce.__file__)), "--zane", "zane",
+                                str(bad)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1)
+            self.assertRegex(r.stdout, r"bad\.md:2: ")
 
 
 class Misc(unittest.TestCase):

@@ -125,6 +125,8 @@ def _check_companion(path):
         return "file=%s must be a relative path with / separators" % path
     if any(part == ".." for part in p.parts):
         return "file=%s must stay inside the package directory" % path
+    if str(p) == ".":
+        return "file=%s names the package directory, not a file" % path
     if str(p) == "main.zn":
         return "file=main.zn would replace the example itself"
     return None
