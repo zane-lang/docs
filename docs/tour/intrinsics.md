@@ -47,8 +47,9 @@ which only the root package reaches ([Effects and capabilities](effects.md)).
 
 A **storage primitive** fixes exactly what the machine holds:
 `@primitives$I64` is a 64-bit integer, `@primitives$F64` a 64-bit IEEE float,
-and `@primitives$String` a string's bytes. A primitive has no operators and no
-methods. A program can use primitives without `core`, calling the machine
+and `@primitives$String` a string's bytes. A primitive has no operators, and
+its few methods, such as `@primitives$String`'s `byteCount`, are intrinsics
+too. A program can use primitives without `core`, calling the machine
 operations directly, which is what the `main.zn` of a new project does before
 it has any dependency:
 
@@ -76,9 +77,12 @@ wrapper is where operators, methods and conversions live, and it is library
 code that you can read and that a new version of `std` can change without a
 new compiler.
 
-`core` also declares implicit conversions in both directions, such as
-`implicit @primitives$I64(v Int)`, so an `Int` passes wherever a function
-takes an `@primitives$I64`. That is why a foreign verb, which uses primitive
+`core` also declares implicit conversions from its types to their
+primitives, such as `implicit @primitives$I64(v Int)`, so an `Int` passes
+wherever a function takes an `@primitives$I64`. The other direction is
+implicit only for some types: `Int` and `Bool` convert from their primitives
+implicitly, while `Float` and `String` need an explicit call such as
+`Float(value)`. That is why a foreign verb, which uses primitive
 types ([Calling C](../guides/c-interop.md)), accepts `core`'s types as
 arguments.
 
@@ -100,8 +104,12 @@ constructor from the concept. `core`'s `Int` has one:
 implicit Int(v @concepts$Int) => Int(@primitives$I64(v));
 ```
 
-So `print(Int(20))` and `width * 2` work because `core` declares how `20` becomes
-an `Int`, not because the compiler knows about `Int`. A declaration does not
+So passing `20` where a function takes an `Int` works because `core` declares
+how `20` becomes an `Int`, not because the compiler knows about `Int`. An
+operator's operands are passed as written, so `width * 2` works through a
+separate overload, `Int *(left Int, right @concepts$Int)`, which `core`
+declares for each operator. A type of your own that should take literals as
+operands declares such overloads too. A declaration does not
 convert on its own, so `width Int = 6;` is an error, and `width Int = Int(6);`
 calls the constructor ([Basics](basics.md)). A concept cannot be stored:
 
@@ -152,8 +160,8 @@ A function can also overload on concepts: `@concepts$Int` and
 `@concepts$Float` are different types, so one overload can take an integer
 literal and another a float literal ([Generics](generics.md)).
 
-A literal is known at compile time, so the conversion is checked at compile
-time too. A literal that its primitive cannot hold is a compile-time error
+A number literal is known at compile time, so its conversion is checked at
+compile time too. A number literal that its primitive cannot hold is a compile-time error
 rather than a value that wraps when the program runs:
 
 ```zane error
@@ -210,8 +218,9 @@ Bool if(condition Bool, body @concepts$Block) {
 }
 ```
 
-Every intrinsic takes storage primitives, function values or type
-parameters, and never a type that a package declares. That is what keeps
+No intrinsic's signature names a type that a package declares: intrinsics
+take storage primitives, function values, and type parameters, such as the
+subject of any type that the worker intrinsics take. That is what keeps
 `core` an ordinary package: `@controlflow$branch` takes an
 `@primitives$Bool`, `core`'s `Bool` reaches it through an implicit conversion
 that `core` declares, and any other package can declare its own control flow
@@ -239,8 +248,8 @@ Most code uses `core`'s types and never names an intrinsic. You write one:
 - to take a literal or a block in a parameter of your own:
   `@concepts$Int`, `@concepts$Float`, `@concepts$Block`;
 - to declare a number parameter: `n @concepts$Int`;
-- in a foreign verb's signature, whose types are primitives
-  ([Calling C](../guides/c-interop.md));
+- in a foreign verb's signature, which uses primitives for its scalars and
+  strings ([Calling C](../guides/c-interop.md));
 - to write a type, operator or control-flow function of your own over the
   machine operations, as `core` does.
 

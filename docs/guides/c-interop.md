@@ -24,7 +24,7 @@ three files are `bin/hello/checksum.h`, `bin/hello/checksum.c` and
 ```c file=checksum.h
 #include <zane_ffi.h>
 
-int64_t checksum(zane_bytes data);
+uint64_t checksum(zane_bytes data);
 ```
 
 `<zane_ffi.h>` is a header that the toolchain gives every package's C code.
@@ -35,8 +35,8 @@ The C source defines the function:
 ```c file=checksum.c
 #include "checksum.h"
 
-int64_t checksum(zane_bytes data) {
-	int64_t sum = 0;
+uint64_t checksum(zane_bytes data) {
+	uint64_t sum = 0;
 	for (size_t i = 0; i < data.size; i++) {
 		sum = sum * 31 + data.data[i];
 	}
@@ -71,11 +71,15 @@ A foreign verb's parameters and result have the compiler's storage types,
 `@primitives$I64` and `@primitives$String` here, because a C function knows
 nothing of `core`'s `Int` and `String`
 ([Intrinsics and concepts](../tour/intrinsics.md) explains the `@` names).
+The checksum uses unsigned arithmetic because a `uint64_t` wraps on overflow,
+where a signed overflow is undefined in C. `@primitives$I64` carries the same
+64 bits, so the Zane side reads the result as a signed integer.
+
 The usual pattern is a private foreign verb, named with a leading `_`, and a
 public function in `core`'s types that calls it. The call `_checksum(text)`
-needs no conversion written out, because `core` declares implicit conversions
-between `String` and `@primitives$String`, and the result becomes an `Int`
-through `Int(...)`.
+needs no conversion written out, because `core` declares an implicit
+conversion from `String` to `@primitives$String`. The other direction is an
+explicit constructor call, so the result becomes an `Int` through `Int(...)`.
 
 The compiler checks every foreign verb against the declaration in the
 package's interface headers. A Zane signature that does not match the C
@@ -84,11 +88,11 @@ declaration is rejected:
 ```c file=checksum.h
 #include <zane_ffi.h>
 
-int64_t checksum(zane_bytes data);
+uint64_t checksum(zane_bytes data);
 ```
 
 ```zane error
-// error: C declares `int64_t` here
+// error: C declares `uint64_t` here
 package hello;
 
 @primitives$I32 checksum(data @primitives$String) foreign "checksum";
@@ -188,10 +192,14 @@ typedef struct zane_span  { const void    *data; size_t count; } zane_span;
 
 A string parameter that the C function declares as `const char *` arrives
 NUL-terminated instead, so a C function that expects a C string needs no
-wrapper.
+wrapper. A Zane string may hold a NUL byte, and C then reads only the bytes
+before it. When the whole string must reach C, declare the parameter as
+`zane_bytes`, which carries the length.
 
 A C function returns a string as a `zane_bytes`. The call copies bytes that C
-owns into a new Zane string. To build a result without that copy, C asks for
+owns into a new Zane string after the C function has returned, so those bytes
+must still be valid then: memory that a handle's object owns, or a static
+buffer, but never a local array of the C function. To build a result without that copy, C asks for
 the bytes with `zane_bytes_alloc`, fills them, and returns a view of them,
 which becomes the Zane string as it is:
 
@@ -265,7 +273,7 @@ typedef struct hasher hasher;
 
 hasher *hasher_new(void);
 void hasher_add(hasher *h, zane_bytes data);
-int64_t hasher_sum(const hasher *h);
+uint64_t hasher_sum(const hasher *h);
 void hasher_free(hasher *h);
 ```
 
@@ -273,7 +281,7 @@ void hasher_free(hasher *h);
 #include <stdlib.h>
 #include "hasher.h"
 
-struct hasher { int64_t sum; };
+struct hasher { uint64_t sum; };
 
 hasher *hasher_new(void) { return calloc(1, sizeof(hasher)); }
 
@@ -283,7 +291,7 @@ void hasher_add(hasher *h, zane_bytes data) {
 	}
 }
 
-int64_t hasher_sum(const hasher *h) { return h->sum; }
+uint64_t hasher_sum(const hasher *h) { return h->sum; }
 
 void hasher_free(hasher *h) { free(h); }
 ```
@@ -391,10 +399,13 @@ Unit main() {
 ```
 
 Each `counter!_next()` is a write, so it runs when the program runs, in the
-order the program makes it. Declared as a plain function,
-`@primitives$I64 next() foreign "counter_next";`, the same C code would be
-wrong: the compiler could evaluate each call at compile time, from the
-counter's first value, and an optimized build would print `1` three times.
+order the program makes it. A binding that skips the capability would be
+wrong: a C function `int64_t counter_bump(void) { return ++the_counter.count; }`
+declared as the plain function `@primitives$I64 bump() foreign "counter_bump";`
+reads and writes the same counter, but the compiler takes it to touch nothing
+outside the program. The compiler could then evaluate each call at compile
+time, from the counter's first value, and an optimized build would print `1`
+three times.
 Only the author of a binding can get this right, and no diagnostic reports the
 mistake.
 
@@ -445,6 +456,13 @@ Unit main() {
 A callback takes and returns scalars, `Bool`, C-compatible structs and `Unit`,
 and may also take strings, lists, arrays and data handles. What the Zane
 function reads and writes counts as what the foreign call reads and writes.
+
+C may call a callback that touches no capability from several threads at
+once. The callbacks of one foreign call that read or write capability-backed
+state, such as one that prints, C calls one at a time: while one of them runs,
+C starts no other call to any of them. The compiler orders the foreign call
+as a whole against other accesses to that state, but it sees none of the
+calls C makes inside it.
 
 ## Build settings: `c.coda`
 
@@ -527,6 +545,8 @@ function reached through a foreign verb must:
 - keep no view, callback or pointer that Zane lent it after the call returns;
 - be safe to call from several threads at once when it touches no capability,
   since such calls may run in parallel ([Concurrency](../tour/concurrency.md));
+- call the callbacks that touch a capability one at a time, and every
+  callback only while the foreign call runs;
 - return normally, without `longjmp` or exiting the process.
 
 A C function that breaks one of these rules gives the program no defined

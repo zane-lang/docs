@@ -81,9 +81,9 @@ starting with `_` is private to its package.
 A declaration states its type, and the value must already be of that type.
 That is why `width Int = Int(6);` calls `Int` on the literal `6`: a literal is
 not yet an `Int`, and a declaration never converts on its own. A literal
-*is* converted when it is passed to a function or used as the operand of an
-operator next to an `Int`, so `width * 2` and `print("text")` need no
-conversion written out.
+*is* converted when it is passed to a function, and `core` declares operators
+that take a literal next to an `Int`, so `width * 2` and `print("text")` need
+no conversion written out.
 
 ## Numbers and booleans
 

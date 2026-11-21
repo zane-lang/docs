@@ -90,6 +90,23 @@ class Companions(unittest.TestCase):
         self.assertEqual(ex[0].expected, "hi")
         self.assertEqual(ex[1].files, {})
 
+    def test_output_companion_is_not_expected_stdout(self):
+        ex = ce.extract("t.md", "```zane\na\n```\n```output file=data.txt\nd\n```\n"
+                                "```zane\nb\n```\n")
+        self.assertIsNone(ex[0].expected)
+        self.assertEqual(ex[1].files, {"data.txt": "d"})
+
+    def test_companion_write_error_is_an_example_failure(self):
+        # `assets` written as a file first leaves no room for the folder `assets/`.
+        ex = ce.Example("t.md", 1, ce.PROGRAM, "package demo;",
+                        files={"assets": "x", "assets/value.txt": "y"})
+        with tempfile.TemporaryDirectory() as d:
+            template = Path(d) / "tmpl"
+            (template / "bin" / "tmpl").mkdir(parents=True)
+            (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
+            msg = ce.check_example(ex, "zane", template, {}, False, d)
+        self.assertIn("cannot write companion file assets/value.txt", msg)
+
     def test_error_example_takes_files(self):
         ex = ce.extract("t.md", "```c file=a.h\nh\n```\n```zane error\nx\n```\n")
         self.assertEqual(ex[0].files, {"a.h": "h"})
@@ -334,6 +351,7 @@ class Commands(unittest.TestCase):
             zane = fake_zane(d, "sleep 5\n")
             template = Path(d) / "tmpl"
             (template / "bin" / "tmpl").mkdir(parents=True)
+            (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
             (template / "bin" / "tmpl" / "main.zn").write_text("", encoding="utf-8")
             ex = [e for e in ce.collect([str(FIX / "error_compiles.md")]) if e.kind == ce.ERROR][0]
             ex.error_text = None  # with no expected text, any non-zero exit used to pass

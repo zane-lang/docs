@@ -174,7 +174,8 @@ def extract(path, text):
             ex.error_text = m.group(1) if m else None
         if kind == PROGRAM and idx + 1 < len(fences):
             nxt = fences[idx + 1]
-            if nxt.lang == "output" and _only_blank(lines, f, nxt):
+            if (nxt.lang == "output" and companion_path(nxt) is None
+                    and _only_blank(lines, f, nxt)):
                 ex.expected = nxt.body
         examples.append(ex)
     if pending:
@@ -415,11 +416,14 @@ def check_example(ex, zane, template, env, keep, workdir):
                     ignore=shutil.ignore_patterns("out"), symlinks=True)
     mf = main_file(proj)
     mf.write_text(rename_package(ex.code, mf.parent.name) + "\n", encoding="utf-8")
-    for name, text in ex.files.items():
-        dest = mf.parent / name
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(text + "\n", encoding="utf-8")
     try:
+        for name, text in ex.files.items():
+            dest = mf.parent / name
+            try:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(text + "\n", encoding="utf-8")
+            except OSError as e:
+                return "cannot write companion file %s: %s" % (name, e)
         if ex.kind == ERROR:
             rc, out, err = run([zane, "check"], proj, env)
             diag = out + err
