@@ -25,12 +25,12 @@ After `zane add https://github.com/zane-lang/std --from-source`, a
 `zane.coda` reads:
 
 ```text
-zane-version v0.41
+zane-version v0.43
 version-pattern v*.+.++
 
 deps [
     key version from
-    std v0.15 source
+    std v0.17 source
 ]
 ```
 
@@ -84,7 +84,7 @@ key is only a local label.
 
 ```text
 hello
-└── std v0.15 (core, math, regex), https://github.com/zane-lang/std, from source
+└── std v0.17 (core, math, regex), https://github.com/zane-lang/std, from source
 ```
 
 A package's code imports a dependency's packages by their own names, such as
@@ -117,7 +117,7 @@ any project. To move a project to another compiler:
 
 ```sh
 zane toolchain update          # the newest release of the project's major version
-zane toolchain update v0.41    # or the release you name
+zane toolchain update v0.43    # or the release you name
 ```
 
 `zane toolchain update` checks the dependency graph against the new compiler
