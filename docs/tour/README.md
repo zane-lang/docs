@@ -14,7 +14,7 @@ Read the pages in order; each page builds on the pages before it.
 8. [Effects and capabilities](effects.md): what a call may change, and reaching the outside world
 9. [Errors](errors.md): abortable functions and their handlers
 10. [Packages](packages.md): imports and privacy
-11. [Concurrency](concurrency.md): `spawn` and its safety rules
+11. [Concurrency](concurrency.md): `spawn`, its safety rules, and worker pools
 
 Each page links to the sections of the
 [specification](https://github.com/zane-lang/spec/blob/main/README.md) that

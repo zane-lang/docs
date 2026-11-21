@@ -215,8 +215,48 @@ Unit main() {
 6 reaches 1 in 8 steps
 ```
 
-`setInterval(every, step)` works like `work`, and waits `every` (a `Duration`,
-such as `Duration.milliseconds(16)`) between steps.
+A worker can also wait between steps. `subject!register(source, step)` calls
+`step` at once, and then again each time `source`, an `EventSource`, is
+ready. `EventSource.every(interval)` makes a timer that is ready each time
+the `Duration` `interval` has passed since the timer was last ready.
+`subject!setInterval(every, step)` is `register` on such a timer:
+
+```zane
+package hello;
+
+import core$;
+
+type Countdown = struct {
+	left Int;
+}
+Countdown(left Int) => init{ left; }
+
+Unit main() {
+	console Console(@program$console);
+	c Countdown(Int(3));
+	c!setInterval(Duration.milliseconds(10), Bool(this Countdown) mut {
+		this.left = this.left - 1;
+		return this.left > 0;
+	});
+	console!print("liftoff");
+	return Unit();
+}
+```
+
+```output
+liftoff
+```
+
+The timer counts each interval from the moment it was last ready, not from
+the end of a step: with `every` at 10 ms, `setInterval` calls the step again
+7 ms after a 3 ms step returns. When a step runs past several intervals, the
+compiler calls the step once more rather than once for each interval it
+missed (compiler
+[divergence 14](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#14-missed-timer-ticks-merge)).
+
+A wait in `register` holds back only the caller of `register`: every spawned
+call keeps running while the wait lasts. To run a worker beside the rest of
+the program, spawn the call ([Concurrency](concurrency.md)).
 
 ## Writing your own
 
@@ -260,7 +300,7 @@ block costs nothing at run time.
 - [Control flow](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md):
   [block arguments](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#2-block-arguments),
   [branching and repetition](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#3-branching-and-repetition),
-  [workers](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#37-work-and-setinterval-run-a-worker),
+  [workers](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#37-work-and-register-run-a-worker),
   [the intrinsics](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#4-control-flow-intrinsics)
   and [counting from 1](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#5-1-based-ordinal-counting)
 - The story behind it: [how branching and repetition became library code](https://github.com/zane-lang/spec/blob/main/stories/control-flow.md)
