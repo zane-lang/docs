@@ -131,4 +131,4 @@ checks; `zane` only runs the programs and reads their exit status.
 
 - [Test packages](https://github.com/zane-lang/spec/blob/main/spec/packages.md#7-test-packages)
 - [Test dependencies](https://github.com/zane-lang/spec/blob/main/spec/dependencies.md#21-manifest-zanecoda)
-- [`zane test`](https://github.com/zane-lang/zane/blob/main/docs/design/cli.md#25-zane-test-test----args)
+- [`zane test`](https://github.com/zane-lang/zane/blob/main/docs/design/cli.md#25-zane-test-test---build-argument-a-----args)
