@@ -34,6 +34,10 @@ Hello!
   declares `Unit`, `Int`, `String`, `Console` and almost everything else on
   these pages. The trailing `$` lets you write the names that `core` declares
   without a `core$` prefix ([Packages](packages.md)).
+- A name that starts with `@`, such as `@program$console`, is supplied by the
+  compiler rather than declared in a package. `@program$console` is the
+  program's console, which `Console(...)` wraps in `core`'s type
+  ([Intrinsics and concepts](intrinsics.md)).
 - A function declaration starts with its return type: `Unit main()` returns
   `Unit`, the type with only one value, which a function returns when it has
   no meaningful result. Every function returns with `return`.

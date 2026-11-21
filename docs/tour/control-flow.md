@@ -263,7 +263,7 @@ the program, spawn the call ([Concurrency](concurrency.md)).
 Control flow is ordinary code, so you can declare more of it. A parameter of
 type `@concepts$Block` takes a block, and the compiler's control-flow
 intrinsics run the block: `@controlflow$repeat(n, body)` runs `body` `n`
-times:
+times ([Intrinsics and concepts](intrinsics.md) explains the `@` names):
 
 ```zane
 package hello;

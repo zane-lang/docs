@@ -14,7 +14,15 @@ it on every push and pull request.
 | ```` ```output ```` | Directly after a `zane` fence (only blank lines between): the program's exact stdout. A single trailing newline is ignored. |
 | ```` ```zane fragment ```` | Shown on the page but not run; the checker counts it as skipped. |
 | ```` ```zane error ```` | Must fail `zane check`. If its first line is `// error: <text>`, the compiler's diagnostics must contain `<text>`. |
+| any fence with `file=<path>` in its info string, such as ```` ```c file=binding.h ```` | A companion file: the checker writes its content at `<path>`, relative to the package directory that holds `main.zn`, for the next `zane` or `zane error` example on the page. `<path>` is relative, may name a subdirectory such as `vendor/zlib.c`, and stays inside the package directory. |
 | any other fence (`sh`, `text`, `coda`, …) | Ignored. |
+
+Companion files let an example carry the C sources, interface headers and
+`c.coda` that [Calling C](docs/guides/c-interop.md) needs. Every companion
+fence sits before the example it belongs to, so an `output` fence still
+directly follows its `zane` fence. A `zane fragment` takes no companion files,
+and a companion fence with no `zane` or `zane error` example after it, or two
+companion fences with one path for one example, fail the check.
 
 Fences follow CommonMark: three or more backticks or tildes, closed by the same
 character at least as long. A `zane` block nested inside a longer

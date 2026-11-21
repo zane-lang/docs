@@ -52,8 +52,9 @@ zane --version
 Compilers are installed side by side under `~/.zane/toolchains/`, one
 directory per version, so projects pinned to different versions build next to
 each other. Each compiler release includes everything needed to build programs
-for Linux, macOS and Windows, so you don't need to install a C compiler or LLVM
-yourself.
+for Linux, macOS and Windows, including the C compiler that builds a
+package's C code ([Calling C](guides/c-interop.md)), so you don't need to
+install a C compiler or LLVM yourself.
 To keep `zane`'s files somewhere other than `~/.zane`, set `ZANE_HOME`.
 
 A new project is pinned to the newest compiler installed. Installing a newer

@@ -132,7 +132,8 @@ second, 1 left
 ## Number parameters
 
 A parameter written `n @concepts$Int` ranges over whole numbers known at
-compile time. `Array<T, n>` uses a number parameter for its length, so the
+compile time. `@concepts$Int` is the type of an integer literal
+([Intrinsics and concepts](intrinsics.md)). `Array<T, n>` uses a number parameter for its length, so the
 length is part of the array's type:
 
 ```zane

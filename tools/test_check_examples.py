@@ -80,6 +80,54 @@ class Classify(unittest.TestCase):
         self.assertEqual(ex[0].line, 3)
 
 
+class Companions(unittest.TestCase):
+    def test_files_go_to_the_next_example_only(self):
+        text = ("```c file=a.h\nh\n```\ntext\n```c file=sub/a.c\nc\n```\n"
+                "```zane\nmain\n```\n```output\nhi\n```\n```zane\nother\n```\n")
+        ex = ce.extract("t.md", text)
+        self.assertEqual([e.kind for e in ex], [ce.PROGRAM, ce.PROGRAM])
+        self.assertEqual(ex[0].files, {"a.h": "h", "sub/a.c": "c"})
+        self.assertEqual(ex[0].expected, "hi")
+        self.assertEqual(ex[1].files, {})
+
+    def test_error_example_takes_files(self):
+        ex = ce.extract("t.md", "```c file=a.h\nh\n```\n```zane error\nx\n```\n")
+        self.assertEqual(ex[0].files, {"a.h": "h"})
+
+    def test_zane_fence_with_file_is_a_companion(self):
+        ex = ce.extract("t.md", "```zane file=other.zn\nx\n```\n```zane\nmain\n```\n")
+        self.assertEqual(len(ex), 1)
+        self.assertEqual(ex[0].files, {"other.zn": "x"})
+
+    def test_fragment_takes_no_files(self):
+        ex = ce.extract("t.md", "```c file=a.h\nh\n```\n```zane fragment\nf\n```\n"
+                                "```zane\nmain\n```\n")
+        self.assertEqual(ex[0].files, {})
+        self.assertEqual(ex[1].files, {"a.h": "h"})
+
+    def test_refused(self):
+        for text, why in [
+            ("```c file=a.h\nh\n```\n", "has no `zane`"),
+            ("```c file=a.h\nh\n```\n```zane fragment\nf\n```\n", "has no `zane`"),
+            ("```c file=../a.h\nh\n```\n```zane\nm\n```\n", "inside the package"),
+            ("```c file=/a.h\nh\n```\n```zane\nm\n```\n", "relative path"),
+            ("```c file=main.zn\nh\n```\n```zane\nm\n```\n", "the example itself"),
+            ("```c file=a.h\nh\n```\n```c file=./a.h\nh\n```\n```zane\nm\n```\n",
+             "given twice"),
+        ]:
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(ce.FenceError, why):
+                    ce.extract("t.md", text)
+
+    def test_cli_reports_a_refused_fence(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "bad.md").write_text("x\n```c file=a.h\nh\n```\n")
+        r = subprocess.run([sys.executable, str(Path(ce.__file__)), "--zane", "zane",
+                            str(d / "bad.md")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 1)
+        self.assertRegex(r.stdout, r"bad\.md:2: ")
+
+
 class Misc(unittest.TestCase):
     def test_summary(self):
         self.assertEqual(ce.summary(3, 1, 2), "3 passed, 1 failed, 2 skipped")
@@ -308,6 +356,10 @@ class Integration(unittest.TestCase):
     def test_error_fence_that_compiles(self):
         failures, _, _ = self.run_fixture("error_compiles.md")
         self.assertIn("expected `zane check` to fail", failures[0][1])
+
+    def test_companion_files(self):
+        failures, passed, _ = self.run_fixture("companion.md")
+        self.assertEqual((failures, passed), ([], 1))
 
     def test_fragment_skipped(self):
         failures, passed, skipped = self.run_fixture("fragment.md")

@@ -15,6 +15,9 @@ test/            test packages
 out/             build output, ignored by Git
 ```
 
+A package's directory holds its `.zn` files, and may also hold C code and a
+`c.coda` with its C build settings ([Calling C](c-interop.md)).
+
 Both `.coda` files are committed, and `zane` writes them for you: the
 commands below change them together, so they never disagree. `zane` finds
 the project from any directory inside it.

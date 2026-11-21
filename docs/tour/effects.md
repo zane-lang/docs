@@ -22,7 +22,8 @@ it can change, however deep the calls it makes go.
 The root package, the package that declares `main`, is the exception: any
 function or method in the root package may also write the program's console
 and runtime, which it reaches through `@program$`, and the foreign
-capabilities that the root package's foreign variables provide. That is why
+capabilities that the root package's foreign variables provide
+([Calling C](../guides/c-interop.md#outside-state-is-a-capability)). That is why
 `main`, a function, can print. A parameter stays read-only even in the root
 package, as the next example shows.
 

@@ -96,7 +96,7 @@ compiler's runtime starts a stand-in thread while a pool thread waits in a
 `register` or on a spawned call's result. The pool holds at most 4095 threads,
 so once that many threads wait at the same time, queued work waits until one
 of them is free. A pool thread gets no stand-in while it waits for a package
-constant that another thread is making, or while it blocks in a call into C
+constant that another thread is making, or while it blocks in a [call into C](../guides/c-interop.md)
 (compiler
 [divergence 11](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#11-a-wait-holds-its-pool-thread-when-the-pool-has-none-to-spare)).
 

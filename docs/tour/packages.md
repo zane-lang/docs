@@ -36,7 +36,8 @@ writes the imported names:
 | `import math$;` | every public name, unqualified |
 
 `$` separates a package from its member everywhere, including the compiler's
-own names such as `@primitives$String`. Keeping the package prefix shows which
+own names such as `@primitives$String`
+([Intrinsics and concepts](intrinsics.md)). Keeping the package prefix shows which
 package a name comes from:
 
 ```zane
