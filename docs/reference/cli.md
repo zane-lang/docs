@@ -1,6 +1,6 @@
 # The `zane` command
 
-This page lists every command of `zane` v0.18, with its flags, and the environment variables it reads.
+This page lists every command of `zane` v0.20, with its flags, and the environment variables it reads.
 
 `zane help` prints a short version of the same list. The
 [design document](https://github.com/zane-lang/zane/blob/main/docs/design/cli.md)
@@ -42,6 +42,11 @@ optimizations, into
 |---|---|
 | `--target <triple>` | builds for another system, such as `x86_64-windows-gnu`, `x86_64-linux-gnu` or `aarch64-macos` |
 | `-o <file>` | names the output file, when one program is built |
+| `--build-argument <arg>` | adds `arg` to the arguments that a call marked `comptime` reads; repeatable |
+
+`zane run`, `zane test` and `zane inspect` take `--build-argument` too, and
+pass it to every compiler run of the program's or test package's own build.
+A dependency's object is compiled without the build's arguments.
 
 ### `zane run [program] [-- args]`
 
@@ -66,8 +71,26 @@ Deletes `out/`.
 Prints one of the compiler's views of a program: `cst` and `sst` (the syntax
 trees of each source file), `decls` (the program's declarations), `tst` (the
 typed tree), `cgt` and `ll` (the generated code). `decls`, `tst`, `cgt` and
-`ll` take `--optimize` and `--target <triple>` to show the code that
-`zane build` produces.
+`ll` take `--optimize`, `--target <triple>` and `--build-argument <arg>` to
+show the code that `zane build` produces.
+
+### `zane builds`
+
+Prints the builds that `zane check` checks, as one JSON object on standard
+output, and runs no compiler. Each build has the label `zane check` shows for
+it and the flags `zane check` passes the compiler. The language server runs
+`zane builds` in each project an editor opens, so the editor shows the
+problems `zane check` reports.
+
+### `zane lsp`
+
+Runs the language server that an editor starts for Zane files: the
+compiler's own server, on standard input and output. Inside a project,
+`zane lsp` runs the project's pinned compiler; anywhere else, it runs the
+compiler `ZANE_COMPILER` names, then the newest installed toolchain, then
+`zanec` on `PATH`. The compiler's
+[`language-server.md`](https://github.com/zane-lang/compiler/blob/main/docs/design/language-server.md)
+describes the server's editor features.
 
 ## Dependency commands
 
@@ -149,8 +172,16 @@ tag that moved.
 
 ### `zane self update [version]`
 
-Replaces this `zane` with the latest release, or with the version you name. A `zane`
-installed by Nix or Homebrew is updated by that package manager instead.
+Replaces this `zane` with the latest release, or with the version you name,
+then puts the newest `std` in the package cache, as `zane self install-std`
+does. A `zane` installed by Nix or Homebrew is updated by that package
+manager instead.
+
+### `zane self install-std`
+
+Puts the newest release of `std` in the package cache, so `zane init` can add
+`std` without network access. The installers run it. It works outside a
+project and changes no project.
 
 ### `zane help`, `zane version`
 
