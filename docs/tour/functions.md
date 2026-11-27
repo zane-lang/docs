@@ -146,7 +146,7 @@ A `mut` method can assign `this` itself: `n!double()` changes `n`.
 
 ## Overloading
 
-Several functions may share a name when their parameter types differ. The
+Several functions may share a function name when their parameter types differ. The
 compiler picks the overload whose parameter types fit the call's arguments:
 
 ```zane

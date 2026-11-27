@@ -340,7 +340,7 @@ Two more fields of `#handle` cover the remaining cases:
 
 ## Outside state is a capability
 
-The compiler cannot see what C code does, so it relies on each foreign verb's
+The compiler cannot see the effects of C code, so it relies on each foreign verb's
 signature. A foreign function, or a method
 on a handle like `Hasher`, is taken to read and write nothing outside the
 program, so a call with arguments known at compile time may be evaluated

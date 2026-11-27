@@ -94,7 +94,7 @@ call that needs it.
 
 A parameter of type `Type` takes a type as an ordinary argument. That is how
 an empty container is made: `List(Int)` is an empty `List<Int>`, because an
-empty list has no elements from which the constructor could learn the element
+empty list has no elements from which the constructor could infer the element
 type.
 
 ```zane

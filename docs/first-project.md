@@ -2,7 +2,7 @@
 
 This page shows how to create and run a program, add the standard library, and then make a library with tests.
 
-This page assumes that `zane` and a compiler are installed ([Install Zane](install.md)).
+Before you start, install `zane` and a compiler ([Install Zane](install.md)).
 
 ## Create and run a program
 
@@ -79,7 +79,7 @@ The [language tour](tour/README.md) explains each of these in turn.
 
 ## The commands you use most
 
-| Command | What it does |
+| Command | Effect |
 |---|---|
 | `zane check` | Type-checks the project without building it: the fast loop while editing |
 | `zane run` | Builds a program and runs it; arguments after `--` go to the program |

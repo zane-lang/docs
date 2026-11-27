@@ -11,7 +11,7 @@ curl -fsSL https://github.com/zane-lang/zane/releases/latest/download/install.sh
 ```
 
 The script checks the download's SHA-256 and writes `~/.local/bin/zane`. To
-install somewhere else, set `ZANE_INSTALL_DIR`; to install a particular
+install into another directory, set `ZANE_INSTALL_DIR`; to install a particular
 version, pass its tag: `sh -s -- v0.18`.
 
 On **Windows x86_64**, in PowerShell:
@@ -55,7 +55,7 @@ each other. Each compiler release includes everything needed to build programs
 for Linux, macOS and Windows, including the C compiler that builds a
 package's C code ([Calling C](guides/c-interop.md)), so you don't need to
 install a C compiler or LLVM yourself.
-To keep `zane`'s files somewhere other than `~/.zane`, set `ZANE_HOME`.
+To keep `zane`'s files in a directory other than `~/.zane`, set `ZANE_HOME`.
 
 A new project is pinned to the newest compiler installed. Installing a newer
 compiler later doesn't change any existing project until you run
