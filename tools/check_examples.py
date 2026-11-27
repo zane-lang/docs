@@ -37,6 +37,9 @@ COMPILER_URL = (
     "https://github.com/zane-lang/compiler/releases/download/{v}/"
     "zane-compiler-{v}-{os}-{arch}.tar.gz"
 )
+# The zane releases name 64-bit ARM `arm64`; the compiler releases name it
+# `aarch64` (zane-compiler-v0.53-macos-aarch64.tar.gz).
+COMPILER_ARCH = {"arm64": "aarch64"}
 TIMEOUT = 300
 # The exit code run() returns for a command it had to stop. No real process
 # exits with this code: a negative code is a signal number, and signal numbers
@@ -319,7 +322,7 @@ def install(pins, cache):
     if not tc.exists():
         print("downloading compiler %s" % pins["compiler"], file=sys.stderr)
         tmp = cache / "compiler.tar.gz"
-        _download(COMPILER_URL.format(v=pins["compiler"], os=os_, arch=arch), tmp)
+        _download(COMPILER_URL.format(v=pins["compiler"], os=os_, arch=COMPILER_ARCH.get(arch, arch)), tmp)
         try:
             extract_compiler(tmp, tc)
         finally:
