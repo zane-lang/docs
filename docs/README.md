@@ -46,5 +46,5 @@ of compiler intrinsics, the names that start with `@`
   lists where it [differs from the
   spec](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md).
 
-These pages target `zane` v0.18, compiler v0.43 and `std` v0.17. Zane's major
+These pages target `zane` v0.20, compiler v0.53 and `std` v0.18. Zane's major
 version is still zero, so the language and its tools change between releases.

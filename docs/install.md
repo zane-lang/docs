@@ -12,7 +12,7 @@ curl -fsSL https://github.com/zane-lang/zane/releases/latest/download/install.sh
 
 The script checks the download's SHA-256 and writes `~/.local/bin/zane`. To
 install into another directory, set `ZANE_INSTALL_DIR`; to install a particular
-version, pass its tag: `sh -s -- v0.18`.
+version, pass its tag: `sh -s -- v0.20`.
 
 On **Windows x86_64**, in PowerShell:
 
@@ -22,7 +22,7 @@ On **Windows x86_64**, in PowerShell:
 
 The PowerShell script installs into `%LOCALAPPDATA%\Programs\Zane\bin` and
 adds that folder to your user `Path`. To install a particular version or into
-another folder, add `-Version v0.18` or `-InstallDir <folder>` after the
+another folder, add `-Version v0.20` or `-InstallDir <folder>` after the
 command above.
 
 Neither installer needs administrator access. You can also download the
