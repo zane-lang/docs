@@ -50,7 +50,7 @@ A **storage primitive** fixes exactly what the machine holds:
 and `@primitives$String` a string's bytes. A primitive has no operators, and
 its few methods, such as `@primitives$String`'s `byteCount`, are intrinsics
 too. A program can use primitives without `core`, calling the machine
-operations directly, which is what the `main.zn` of a new project does before
+operations directly. The `main.zn` of a new project does so before
 it has any dependency:
 
 ```zane
@@ -89,10 +89,10 @@ arguments.
 ## Concepts: what a literal is
 
 In most languages the compiler gives a literal a type of the compiler's own
-choosing: `42` is an `int` in C and Java, and Rust picks `i32` when nothing
-else decides. Zane's compiler picks no type. The literal `42` has the
+choosing: `42` is an `int` in C and Java, and Rust picks `i32` when no
+other rule fixes the type. Zane's compiler picks no type. The literal `42` has the
 **concept type** `@concepts$Int`, the type of an integer literal, and stays
-one until a parameter declares what it becomes. `2.5` is a `@concepts$Float`
+one until a parameter declares its final type. `2.5` is a `@concepts$Float`
 and `"text"` a `@concepts$String`.
 
 A concept type stands only in a parameter, never in storage: a symbol, a field
@@ -232,7 +232,7 @@ the compiler ([Projects](../guides/projects.md)).
 
 `@runtime$Console` and `@runtime$Runtime` are the runtime's types, and
 `@program$console` and `@program$runtime` are the running program's only
-instances of them. Only the root package, the one that declares `main`,
+instances of them. Only the root package, which declares `main`,
 reaches `@program$`, and it passes the console on to the code that may print.
 `Console(@program$console)` wraps the runtime's console in `core`'s `Console`,
 whose methods take `core`'s `String`

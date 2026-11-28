@@ -14,7 +14,7 @@ looks for `zane.coda` there and in each directory above.
 
 Creates a project in `dir`, or in the current directory. The directory must
 be empty apart from the files a new repository holds (`.git/`, `README*`,
-`LICENSE*`, `.gitignore` and the like). In a terminal, `zane init` asks each
+`LICENSE*`, `.gitignore`, and similar repository files). In a terminal, `zane init` asks each
 question below; outside a terminal, or with `--yes`, it uses the defaults.
 
 | Flag | Sets | Default |

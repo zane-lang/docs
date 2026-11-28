@@ -37,7 +37,7 @@ just check-examples --install   # download the pinned toolchain first
 ```
 
 Options: `--zane PATH`, `--jobs N`, `--std PATH` (a local std checkout instead
-of the released one, set with `zane dev std <path>`), `--install` (downloads
+of the released std, set with `zane dev std <path>`), `--install` (downloads
 the versions pinned in `toolchain.coda` to `~/.cache/zane-check-examples` and
 `~/.zane/toolchains`), and `--keep` (keep the temporary projects).
 

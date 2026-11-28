@@ -43,7 +43,7 @@ A **constructor** is a function named after its type. It returns the new
 value with `init{ … }`, which sets every field: `init{ x = Int(0); }` sets `x`
 to a value, and `init{ x; }` is short for `init{ x = x; }`, taking the
 parameter of the same name. `a Vec(Int(1), Int(2));` declares `a` by calling
-the constructor; `a Vec = Vec(Int(1), Int(2));` means the same.
+the constructor; `a Vec = Vec(Int(1), Int(2));` is an equivalent declaration.
 
 A field whose name starts with `_` is private to the package that declares the
 type.
@@ -87,7 +87,7 @@ is moved rather than copied. [Memory](memory.md) covers reference types.
 
 A type can have several constructors. A **field constructor** lists fields in
 braces, optionally with defaults, and the call names the fields it sets. A
-**named constructor** adds a name after the type:
+**named constructor** adds an identifier after the type:
 
 ```zane
 package hello;
@@ -204,9 +204,9 @@ a + c == b
 ```
 
 The operators are a fixed set (`~`, `*`, `/`, `+`, `==`, `<`, `and`, `or`,
-and the ones derived from them), with fixed precedence. An operator is
+and the operators derived from them), with fixed precedence. An operator is
 declared in the package of one of its operand types, so importing a package
-never changes what `a + b` means.
+never changes the meaning of `a + b`.
 
 ## `type` and `alias`
 

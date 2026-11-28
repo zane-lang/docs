@@ -2,7 +2,7 @@
 
 This page covers abortable functions, which fail along a second, typed return path, and the `?` and `??` handlers that deal with a failure where the call is made.
 
-## A second way to return
+## A second return path
 
 A function that can fail declares an **abort type** after its return type,
 separated by `?`. `Int?DivError` returns an `Int`, or aborts with a

@@ -361,7 +361,7 @@ def make_template(zane, root, std=None, std_tag=None, env=None, compiler=None):
 
     `zane init` pins the newest installed compiler, so when `compiler` is given
     and `zane init` pinned another one, `zane toolchain update` moves the
-    template to `compiler`. The update asks the GitHub API for the release, so
+    template to `compiler`. The update queries the GitHub API for the release, so
     it runs only when the pin differs.
     """
     rc, out, err = run([zane, "init", "tmpl", "--yes"], root, env)

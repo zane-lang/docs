@@ -38,7 +38,7 @@ writes the imported names:
 `$` separates a package from its member everywhere, including the compiler's
 own names such as `@primitives$String`
 ([Intrinsics and concepts](intrinsics.md)). Keeping the package prefix shows which
-package a name comes from:
+package declares an identifier:
 
 ```zane
 package hello;
@@ -84,7 +84,7 @@ Each imported name has one spelling in a file, so `import math;` and
 `import math$sqrt;` together are an error, and two imports that bring in the
 same bare name are an error at the import. An import only adds names: an
 operator such as `+` is always declared in the package of one of its operand
-types, so no import can change what an expression means.
+types, so no import can change the meaning of an expression.
 
 ## Privacy
 

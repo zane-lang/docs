@@ -1,6 +1,6 @@
 # Memory
 
-This page covers how Zane manages memory without a garbage collector: value types, reference types and their owners, references, moves, and when things are destroyed.
+This page covers how Zane manages memory without a garbage collector: value types, reference types and their owners, references, moves, and when values are destroyed.
 
 ## Two kinds of types
 
@@ -178,7 +178,7 @@ Unit main() {
 ```
 
 Once `bob` has been moved into the bank, it is **spent**: using it again is an
-error, until something new is stored in it.
+error, until a new value is stored in it.
 
 ```zane error
 // error: is spent until a store refills it
@@ -226,8 +226,8 @@ Unit main() {
 
 ## How arguments are passed
 
-How a reference-type argument is passed depends on how the type of its
-parameter is written:
+The way a function receives a reference-type argument depends on the
+spelling of its parameter's type:
 
 | Parameter | Mode | The caller… |
 |---|---|---|

@@ -65,13 +65,13 @@ resolutions [
 The lock file records each pinned tag with the commit that the tag pointed to
 when the dependency was added, and `zane-commit` records the compiler's commit
 the same way. A tag that later points
-somewhere else is refused as a security error, unless you accept the move
+at another commit is refused as a security error, unless you accept the move
 with `--accept-tag-move`. A package is identified by its repository URL; the
 key is only a local label.
 
 ## Working with dependencies
 
-| Command | What it does |
+| Command | Effect |
 |---|---|
 | `zane add <url> [tag]` | Depends on a library at its newest tag or at the tag you name, and prints the `import` lines for the library's packages |
 | `zane add <url> --from-source` | Adds the library the same way, but compiles it in your project instead of linking it from a release |
@@ -104,8 +104,8 @@ interchangeable.
 ## Versions
 
 A release is a Git tag such as `v0.15`. The version pattern `v*.+.++` reads
-"the first number must match (`*`); otherwise prefer the highest second
-number (`+`), then the highest third (`++`)". The pattern lets `zane remap`
+"the first number must match (`*`); among the matches, take the highest
+second number (`+`), then the highest third (`++`)". The pattern lets `zane remap`
 pick one version for every project that depends on the library.
 
 Fetched packages are kept in a cache shared by all projects, under
