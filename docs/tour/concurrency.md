@@ -173,10 +173,7 @@ lists every verb.
   [safety rules](https://github.com/zane-lang/spec/blob/main/spec/concurrency.md#4-safety-rules-under-concurrency)
   and [worker pools](https://github.com/zane-lang/spec/blob/main/spec/concurrency.md#6-worker-pools)
 - Where the compiler differs: divergences
-  [7](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#7-a-spawned-calls-handler-runs-where-the-call-settles),
-  [8](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#8-a-block-does-not-write-an-owner-it-lent-a-running-spawn),
-  [11](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#11-a-wait-holds-its-pool-thread-when-the-pool-has-none-to-spare),
-  [12](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#12-a-read-of-a-pools-state-or-elements-waits-for-a-writer),
-  [13](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#13-a-publish-function-called-outside-its-pools-work-stops-the-program)
-  and [14](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#14-missed-timer-ticks-merge)
+  [8](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#8-a-write-through-a-reference-is-judged-by-type),
+  [11](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#11-a-wait-holds-its-pool-thread-when-the-pool-has-none-to-spare)
+  and [12](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#12-a-read-of-a-pools-state-or-elements-waits-for-a-writer)
 - The story behind it: [implicit parallelism without async coloring](https://github.com/zane-lang/spec/blob/main/stories/concurrency.md)

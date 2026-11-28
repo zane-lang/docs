@@ -105,9 +105,9 @@ Float area(this Shape) => match (this) {
 }
 ```
 
-The compiler requires the scrutinee in parentheses, `match (shape)`, where
-the spec writes the scrutinee without them (compiler
-[divergence 4](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#4-a-match-parenthesizes-its-scrutinee-list)).
+The scrutinee is written in parentheses, `match (shape)`. The parentheses
+delimit the scrutinee list and form no tuple
+([spec §4.7](https://github.com/zane-lang/spec/blob/main/spec/syntax.md#47-match-expressions)).
 
 ## Matching several values
 
@@ -247,8 +247,6 @@ Unit main() {
   [variants](https://github.com/zane-lang/spec/blob/main/spec/adt.md#3-variants),
   [`match`](https://github.com/zane-lang/spec/blob/main/spec/adt.md#5-matching-a-variant)
   and [enum maps](https://github.com/zane-lang/spec/blob/main/spec/adt.md#6-enum-maps)
-- Where the compiler differs: divergences
-  [1](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#1-a-match-arms-terminator-follows-its-body),
-  [4](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#4-a-match-parenthesizes-its-scrutinee-list)
-  and [9](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#9-a-case-is-not-a-type)
+- Where the compiler differs:
+  [divergence 9](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#9-a-case-is-not-a-type)
 - The story behind it: [algebraic data types](https://github.com/zane-lang/spec/blob/main/stories/adt.md)

@@ -148,9 +148,10 @@ changes the signature that every caller depends on.
 ## Program errors
 
 Some mistakes are not failures a caller can handle. Reading a list at a
-position outside the list stops the program: the runtime writes `index out of
-range` to standard error and exits with status 1 (compiler
-[divergence 10](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#10-an-index-out-of-range-stops-the-program)).
+position outside the list stops the program
+([spec §5.2](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#52-a-position-outside-its-sequence-stops-the-program)):
+the runtime writes `index out of range` to standard error and exits with
+status 1.
 
 ## In the spec
 

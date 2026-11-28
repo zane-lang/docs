@@ -169,9 +169,9 @@ Unit main() {
 done
 ```
 
-In the spec, `guard` ends the whole function that calls it; the compiler
-instead ends the block and accepts `guard` only inside a block (compiler
-[divergence 6](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#6-an-exit-ends-the-run-of-a-block)).
+`guard` ends the run of the innermost block it is written in, not the whole
+function, so a call to `guard` is legal only inside a block
+([spec §2.3](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#23-a-block-is-transparent-to-return-and-abort-and-an-exit-ends-its-run)).
 
 ## Workers: loops without a count
 
@@ -250,9 +250,8 @@ liftoff
 The timer counts each interval from the moment it was last ready, not from
 the end of a step: with `every` at 10 ms, `setInterval` calls the step again
 7 ms after a 3 ms step returns. When a step runs past several intervals, the
-compiler calls the step once more rather than once for each interval it
-missed (compiler
-[divergence 14](https://github.com/zane-lang/compiler/blob/main/docs/spec-divergences.md#14-missed-timer-ticks-merge)).
+timer calls the step once more rather than once for each interval it missed
+([spec §6.3](https://github.com/zane-lang/spec/blob/main/spec/concurrency.md#63-when-a-step-runs)).
 
 A wait in `register` holds back only the caller of `register`: every spawned
 call keeps running while the wait lasts. To run a worker beside the rest of
