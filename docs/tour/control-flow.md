@@ -169,8 +169,8 @@ Unit main() {
 done
 ```
 
-`guard` ends the run of the innermost block it is written in, not the whole
-function, so a call to `guard` is legal only inside a block
+`guard` ends the run of the innermost block argument around its call, not the
+whole function, so a call to `guard` is legal only inside a block argument
 ([spec §2.3](https://github.com/zane-lang/spec/blob/main/spec/control-flow.md#23-a-block-is-transparent-to-return-and-abort-and-an-exit-ends-its-run)).
 
 ## Workers: loops without a count
